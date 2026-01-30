@@ -1,0 +1,16 @@
+2026-01-30T20:55:57.184+08:00  INFO 6012 --- [AgentX] [main] org.xhy.AgentXApplication                : Starting AgentXApplication using Java 17.0.17 with PID 6012 (D:\develop\idea\idea\idea_workspace\agent\target\classes started by 57038 in D:\develop\idea\idea\idea_workspace\agent)
+2026-01-30T20:55:57.188+08:00 DEBUG 6012 --- [AgentX] [main] org.xhy.AgentXApplication                : Running with Spring Boot v3.2.3, Spring v6.1.4
+2026-01-30T20:55:57.189+08:00  INFO 6012 --- [AgentX] [main] org.xhy.AgentXApplication                : No active profile set, falling back to 1 default profile: "default"
+2026-01-30T20:55:58.253+08:00  WARN 6012 --- [AgentX] [main] o.m.s.mapper.ClassPathMapperScanner      : No MyBatis mapper was found in '[org.xhy]' package. Please check your configuration.
+2026-01-30T20:55:58.657+08:00  WARN 6012 --- [AgentX] [main] trationDelegate$BeanPostProcessorChecker : Bean 'forest-com.dtflys.forest.springboot.properties.ForestConfigurationProperties' of type [com.dtflys.forest.springboot.properties.ForestConfigurationProperties] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected into a currently created BeanPostProcessor [forestBeanRegister]? Check the corresponding BeanPostProcessor declaration and its dependencies.
+2026-01-30T20:55:59.001+08:00  INFO 6012 --- [AgentX] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8088 (http)
+2026-01-30T20:55:59.006+08:00  INFO 6012 --- [AgentX] [main] o.a.catalina.core.AprLifecycleListener   : Loaded Apache Tomcat Native library [2.0.7] using APR version [1.7.4].
+2026-01-30T20:55:59.014+08:00  INFO 6012 --- [AgentX] [main] o.a.catalina.core.AprLifecycleListener   : OpenSSL successfully initialized [OpenSSL 3.0.13 30 Jan 2024]
+2026-01-30T20:55:59.028+08:00  INFO 6012 --- [AgentX] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-01-30T20:55:59.029+08:00  INFO 6012 --- [AgentX] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.19]
+2026-01-30T20:55:59.136+08:00  INFO 6012 --- [AgentX] [main] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2026-01-30T20:55:59.138+08:00  INFO 6012 --- [AgentX] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1882 ms
+2026-01-30T20:55:59.259+08:00  WARN 6012 --- [AgentX] [main] o.d.x.f.s.s.FileStorageAutoConfiguration : 没有找到 FileRecorder 的实现类，文件上传之外的部分功能无法正常使用，必须实现该接口才能使用完整功能！
+2026-01-30T20:55:59.289+08:00  INFO 6012 --- [AgentX] [main] o.d.x.f.s.c.FileStorageServiceBuilder    : 加载 Amazon S3 存储平台：amazon-s3-1
+2026-01-30T20:56:00.528+08:00  INFO 6012 --- [AgentX] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8088 (http) with context path '/api'
+2026-01-30T20:56:00.545+08:00  INFO 6012 --- [AgentX] [main] org.xhy.AgentXApplication                : Started AgentXApplication in 4.043 seconds (process running for 4.95)
