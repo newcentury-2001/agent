@@ -1,28 +1,26 @@
-2026-01-31T00:48:13.649+08:00  INFO 25664 --- [AgentX] [main] org.xhy.AgentXApplication                : Starting AgentXApplication using Java 17.0.17 with PID 25664 (D:\develop\idea\idea\idea_workspace\agent\target\classes started by 57038 in D:\develop\idea\idea\idea_workspace\agent)
-2026-01-31T00:48:13.658+08:00 DEBUG 25664 --- [AgentX] [main] org.xhy.AgentXApplication                : Running with Spring Boot v3.2.3, Spring v6.1.4
-2026-01-31T00:48:13.661+08:00  INFO 25664 --- [AgentX] [main] org.xhy.AgentXApplication                : No active profile set, falling back to 1 default profile: "default"
-2026-01-31T00:49:21.033+08:00  WARN 25664 --- [AgentX] [main] trationDelegate$BeanPostProcessorChecker : Bean 'forest-com.dtflys.forest.springboot.properties.ForestConfigurationProperties' of type [com.dtflys.forest.springboot.properties.ForestConfigurationProperties] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected into a currently created BeanPostProcessor [forestBeanRegister]? Check the corresponding BeanPostProcessor declaration and its dependencies.
-2026-01-31T00:49:21.746+08:00  INFO 25664 --- [AgentX] [main] c.d.f.scanner.ClassPathClientScanner     : [Forest] Created Forest Client Bean with name 'rerankForestApi' and Proxy of 'org.xhy.infrastructure.rag.api.RerankForestApi' client interface
-2026-01-31T00:49:23.278+08:00  INFO 25664 --- [AgentX] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8088 (http)
-2026-01-31T00:49:23.281+08:00  INFO 25664 --- [AgentX] [main] o.a.catalina.core.AprLifecycleListener   : Loaded Apache Tomcat Native library [2.0.7] using APR version [1.7.4].
-2026-01-31T00:49:23.286+08:00  INFO 25664 --- [AgentX] [main] o.a.catalina.core.AprLifecycleListener   : OpenSSL successfully initialized [OpenSSL 3.0.13 30 Jan 2024]
-2026-01-31T00:49:23.297+08:00  INFO 25664 --- [AgentX] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2026-01-31T00:49:23.297+08:00  INFO 25664 --- [AgentX] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.19]
-2026-01-31T00:49:23.388+08:00  INFO 25664 --- [AgentX] [main] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
-2026-01-31T00:49:23.388+08:00  INFO 25664 --- [AgentX] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 69638 ms
-2026-01-31T00:49:25.826+08:00  WARN 25664 --- [AgentX] [main] o.x.i.mcp_gateway.MCPGatewayService      : MCP Gateway基础URL未配置 (mcp.gateway.base-url)
-2026-01-31T00:49:25.826+08:00  INFO 25664 --- [AgentX] [main] o.x.i.mcp_gateway.MCPGatewayService      : MCP Gateway服务已初始化，基础URL: null
-2026-01-31T00:49:25.900+08:00  INFO 25664 --- [AgentX] [main] o.x.infrastructure.github.GitHubService  : 使用GitHub访问令牌进行认证访问
-2026-01-31T00:49:28.944+08:00  INFO 25664 --- [AgentX] [main] org.kohsuke.github.GitHubClient          : (714bffd5) class javax.net.ssl.SSLHandshakeException while connecting to https://api.github.com/user: 'PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target'. Sleeping 100 milliseconds before retrying (2 retries remaining)
-2026-01-31T00:49:29.157+08:00  INFO 25664 --- [AgentX] [main] org.kohsuke.github.GitHubClient          : (714bffd5) class javax.net.ssl.SSLHandshakeException while connecting to https://api.github.com/user: 'PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target'. Sleeping 100 milliseconds before retrying (1 retries remaining)
-2026-01-31T00:49:29.395+08:00  INFO 25664 --- [AgentX] [main] o.x.infrastructure.github.GitHubService  : GitHub服务已初始化，目标仓库: lucky-aeon/agent-mcp-community
-2026-01-31T00:49:30.046+08:00  INFO 25664 --- [AgentX] [main] o.x.infrastructure.docker.DockerService  : 正在初始化Docker客户端，连接地址: unix:///var/run/docker.sock
-2026-01-31T00:49:31.063+08:00  WARN 25664 --- [AgentX] [main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'adminToolAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\admin\tool\service\AdminToolAppService.class]: Unsatisfied dependency expressed through constructor parameter 1: Error creating bean with name 'toolStateStateMachineAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\tool\service\ToolStateStateMachineAppService.class]: Unsatisfied dependency expressed through constructor parameter 3: Error creating bean with name 'reviewContainerService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\container\service\ReviewContainerService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'containerAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\container\service\ContainerAppService.class]: Unsatisfied dependency expressed through constructor parameter 3: Error creating bean with name 'dockerService': Invocation of init method failed
-2026-01-31T00:49:31.067+08:00  INFO 25664 --- [AgentX] [main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
-2026-01-31T00:49:31.091+08:00  INFO 25664 --- [AgentX] [main] .s.b.a.l.ConditionEvaluationReportLogger : 
+2026-02-02T11:58:52.784+08:00  INFO 33048 --- [AgentX] [main] org.xhy.AgentXApplication                : Starting AgentXApplication using Java 17.0.17 with PID 33048 (D:\develop\idea\idea\idea_workspace\agent\target\classes started by 57038 in D:\develop\idea\idea\idea_workspace\agent)
+2026-02-02T11:58:52.807+08:00 DEBUG 33048 --- [AgentX] [main] org.xhy.AgentXApplication                : Running with Spring Boot v3.2.3, Spring v6.1.4
+2026-02-02T11:58:52.810+08:00  INFO 33048 --- [AgentX] [main] org.xhy.AgentXApplication                : No active profile set, falling back to 1 default profile: "default"
+2026-02-02T11:59:20.908+08:00  WARN 33048 --- [AgentX] [main] trationDelegate$BeanPostProcessorChecker : Bean 'forest-com.dtflys.forest.springboot.properties.ForestConfigurationProperties' of type [com.dtflys.forest.springboot.properties.ForestConfigurationProperties] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected into a currently created BeanPostProcessor [forestBeanRegister]? Check the corresponding BeanPostProcessor declaration and its dependencies.
+2026-02-02T11:59:21.178+08:00  INFO 33048 --- [AgentX] [main] c.d.f.scanner.ClassPathClientScanner     : [Forest] Created Forest Client Bean with name 'rerankForestApi' and Proxy of 'org.xhy.infrastructure.rag.api.RerankForestApi' client interface
+2026-02-02T11:59:21.845+08:00  INFO 33048 --- [AgentX] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8088 (http)
+2026-02-02T11:59:21.851+08:00  INFO 33048 --- [AgentX] [main] o.a.catalina.core.AprLifecycleListener   : Loaded Apache Tomcat Native library [2.0.7] using APR version [1.7.4].
+2026-02-02T11:59:21.858+08:00  INFO 33048 --- [AgentX] [main] o.a.catalina.core.AprLifecycleListener   : OpenSSL successfully initialized [OpenSSL 3.0.13 30 Jan 2024]
+2026-02-02T11:59:21.881+08:00  INFO 33048 --- [AgentX] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-02-02T11:59:21.882+08:00  INFO 33048 --- [AgentX] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.19]
+2026-02-02T11:59:22.027+08:00  INFO 33048 --- [AgentX] [main] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2026-02-02T11:59:22.029+08:00  INFO 33048 --- [AgentX] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 29124 ms
+2026-02-02T11:59:23.328+08:00  WARN 33048 --- [AgentX] [main] o.x.i.mcp_gateway.MCPGatewayService      : MCP Gateway基础URL未配置 (mcp.gateway.base-url)
+2026-02-02T11:59:23.328+08:00  INFO 33048 --- [AgentX] [main] o.x.i.mcp_gateway.MCPGatewayService      : MCP Gateway服务已初始化，基础URL: null
+2026-02-02T11:59:23.431+08:00  INFO 33048 --- [AgentX] [main] o.x.infrastructure.github.GitHubService  : 使用GitHub访问令牌进行认证访问
+2026-02-02T11:59:24.659+08:00  INFO 33048 --- [AgentX] [main] o.x.infrastructure.github.GitHubService  : GitHub服务已初始化，目标仓库: lucky-aeon/agent-mcp-community
+2026-02-02T11:59:24.838+08:00  INFO 33048 --- [AgentX] [main] o.x.infrastructure.docker.DockerService  : 正在初始化Docker客户端，连接地址: unix:///var/run/docker.sock
+2026-02-02T12:00:22.805+08:00  WARN 33048 --- [AgentX] [main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'adminToolAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\admin\tool\service\AdminToolAppService.class]: Unsatisfied dependency expressed through constructor parameter 1: Error creating bean with name 'toolStateStateMachineAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\tool\service\ToolStateStateMachineAppService.class]: Unsatisfied dependency expressed through constructor parameter 3: Error creating bean with name 'reviewContainerService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\container\service\ReviewContainerService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'containerAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\container\service\ContainerAppService.class]: Unsatisfied dependency expressed through constructor parameter 3: Error creating bean with name 'dockerService': Invocation of init method failed
+2026-02-02T12:00:22.810+08:00  INFO 33048 --- [AgentX] [main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+2026-02-02T12:00:22.834+08:00  INFO 33048 --- [AgentX] [main] .s.b.a.l.ConditionEvaluationReportLogger : 
 
 Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
-2026-01-31T00:49:31.139+08:00 ERROR 25664 --- [AgentX] [main] o.s.boot.SpringApplication               : Application run failed
+2026-02-02T12:00:22.865+08:00 ERROR 33048 --- [AgentX] [main] o.s.boot.SpringApplication               : Application run failed
 
 org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'adminToolAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\admin\tool\service\AdminToolAppService.class]: Unsatisfied dependency expressed through constructor parameter 1: Error creating bean with name 'toolStateStateMachineAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\tool\service\ToolStateStateMachineAppService.class]: Unsatisfied dependency expressed through constructor parameter 3: Error creating bean with name 'reviewContainerService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\container\service\ReviewContainerService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'containerAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\container\service\ContainerAppService.class]: Unsatisfied dependency expressed through constructor parameter 3: Error creating bean with name 'dockerService': Invocation of init method failed
 	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:798) ~[spring-beans-6.1.4.jar:6.1.4]
@@ -113,6 +111,165 @@ Caused by: org.springframework.beans.factory.BeanCreationException: Error creati
 	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:785) ~[spring-beans-6.1.4.jar:6.1.4]
 	... 61 common frames omitted
 Caused by: java.lang.UnsatisfiedLinkError: Error looking up function 'write': 找不到指定的程序。
+
+	at com.sun.jna.Function.<init>(Function.java:252) ~[jna-5.13.0.jar:5.13.0 (b0)]
+	at com.sun.jna.NativeLibrary.getFunction(NativeLibrary.java:620) ~[jna-5.13.0.jar:5.13.0 (b0)]
+	at com.sun.jna.NativeLibrary.getFunction(NativeLibrary.java:596) ~[jna-5.13.0.jar:5.13.0 (b0)]
+	at com.sun.jna.NativeLibrary.getFunction(NativeLibrary.java:582) ~[jna-5.13.0.jar:5.13.0 (b0)]
+	at com.sun.jna.Native.register(Native.java:1904) ~[jna-5.13.0.jar:5.13.0 (b0)]
+	at com.sun.jna.Native.register(Native.java:1775) ~[jna-5.13.0.jar:5.13.0 (b0)]
+	at com.sun.jna.Native.register(Native.java:1493) ~[jna-5.13.0.jar:5.13.0 (b0)]
+	at com.github.dockerjava.transport.DomainSocket.<clinit>(DomainSocket.java:54) ~[docker-java-transport-3.3.6.jar:na]
+	at com.github.dockerjava.transport.UnixSocket.get(UnixSocket.java:29) ~[docker-java-transport-3.3.6.jar:na]
+	at com.github.dockerjava.httpclient5.ApacheDockerHttpClientImpl$2.createSocket(ApacheDockerHttpClientImpl.java:154) ~[docker-java-transport-httpclient5-3.3.6.jar:na]
+	at org.apache.hc.client5.http.socket.ConnectionSocketFactory.createSocket(ConnectionSocketFactory.java:67) ~[httpclient5-5.2.3.jar:5.2.3]
+	at org.apache.hc.client5.http.impl.io.DefaultHttpClientConnectionOperator.connect(DefaultHttpClientConnectionOperator.java:158) ~[httpclient5-5.2.3.jar:5.2.3]
+	at org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager.connect(PoolingHttpClientConnectionManager.java:447) ~[httpclient5-5.2.3.jar:5.2.3]
+	at org.apache.hc.client5.http.impl.classic.InternalExecRuntime.connectEndpoint(InternalExecRuntime.java:162) ~[httpclient5-5.2.3.jar:5.2.3]
+	at org.apache.hc.client5.http.impl.classic.InternalExecRuntime.connectEndpoint(InternalExecRuntime.java:172) ~[httpclient5-5.2.3.jar:5.2.3]
+	at org.apache.hc.client5.http.impl.classic.ConnectExec.execute(ConnectExec.java:142) ~[httpclient5-5.2.3.jar:5.2.3]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.2.3.jar:5.2.3]
+	at org.apache.hc.client5.http.impl.classic.ProtocolExec.execute(ProtocolExec.java:192) ~[httpclient5-5.2.3.jar:5.2.3]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.2.3.jar:5.2.3]
+	at org.apache.hc.client5.http.impl.classic.HttpRequestRetryExec.execute(HttpRequestRetryExec.java:96) ~[httpclient5-5.2.3.jar:5.2.3]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.2.3.jar:5.2.3]
+	at org.apache.hc.client5.http.impl.classic.ContentCompressionExec.execute(ContentCompressionExec.java:152) ~[httpclient5-5.2.3.jar:5.2.3]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.2.3.jar:5.2.3]
+	at org.apache.hc.client5.http.impl.classic.RedirectExec.execute(RedirectExec.java:115) ~[httpclient5-5.2.3.jar:5.2.3]
+	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51) ~[httpclient5-5.2.3.jar:5.2.3]
+	at org.apache.hc.client5.http.impl.classic.InternalHttpClient.doExecute(InternalHttpClient.java:170) ~[httpclient5-5.2.3.jar:5.2.3]
+	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:87) ~[httpclient5-5.2.3.jar:5.2.3]
+	at com.github.dockerjava.httpclient5.ApacheDockerHttpClientImpl.execute(ApacheDockerHttpClientImpl.java:206) ~[docker-java-transport-httpclient5-3.3.6.jar:na]
+	at com.github.dockerjava.httpclient5.ApacheDockerHttpClient.execute(ApacheDockerHttpClient.java:9) ~[docker-java-transport-httpclient5-3.3.6.jar:na]
+	at com.github.dockerjava.core.DefaultInvocationBuilder.execute(DefaultInvocationBuilder.java:228) ~[docker-java-core-3.3.6.jar:na]
+	at com.github.dockerjava.core.DefaultInvocationBuilder.get(DefaultInvocationBuilder.java:202) ~[docker-java-core-3.3.6.jar:na]
+	at com.github.dockerjava.core.exec.PingCmdExec.execute(PingCmdExec.java:26) ~[docker-java-core-3.3.6.jar:na]
+	at com.github.dockerjava.core.exec.PingCmdExec.execute(PingCmdExec.java:12) ~[docker-java-core-3.3.6.jar:na]
+	at com.github.dockerjava.core.exec.AbstrSyncDockerCmdExec.exec(AbstrSyncDockerCmdExec.java:21) ~[docker-java-core-3.3.6.jar:na]
+	at com.github.dockerjava.core.command.AbstrDockerCmd.exec(AbstrDockerCmd.java:33) ~[docker-java-core-3.3.6.jar:na]
+	at org.xhy.infrastructure.docker.DockerService.init(DockerService.java:54) ~[classes/:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569) ~[na:na]
+	at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleMethod.invoke(InitDestroyAnnotationBeanPostProcessor.java:457) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleMetadata.invokeInitMethods(InitDestroyAnnotationBeanPostProcessor.java:401) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor.postProcessBeforeInitialization(InitDestroyAnnotationBeanPostProcessor.java:219) ~[spring-beans-6.1.4.jar:6.1.4]
+	... 74 common frames omitted
+
+2026-02-02T12:02:00.692+08:00  INFO 16336 --- [AgentX] [main] org.xhy.AgentXApplication                : Starting AgentXApplication using Java 17.0.17 with PID 16336 (D:\develop\idea\idea\idea_workspace\agent\target\classes started by 57038 in D:\develop\idea\idea\idea_workspace\agent)
+2026-02-02T12:02:00.694+08:00 DEBUG 16336 --- [AgentX] [main] org.xhy.AgentXApplication                : Running with Spring Boot v3.2.3, Spring v6.1.4
+2026-02-02T12:02:00.696+08:00  INFO 16336 --- [AgentX] [main] org.xhy.AgentXApplication                : No active profile set, falling back to 1 default profile: "default"
+2026-02-02T12:02:03.141+08:00  WARN 16336 --- [AgentX] [main] trationDelegate$BeanPostProcessorChecker : Bean 'forest-com.dtflys.forest.springboot.properties.ForestConfigurationProperties' of type [com.dtflys.forest.springboot.properties.ForestConfigurationProperties] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected into a currently created BeanPostProcessor [forestBeanRegister]? Check the corresponding BeanPostProcessor declaration and its dependencies.
+2026-02-02T12:02:03.374+08:00  INFO 16336 --- [AgentX] [main] c.d.f.scanner.ClassPathClientScanner     : [Forest] Created Forest Client Bean with name 'rerankForestApi' and Proxy of 'org.xhy.infrastructure.rag.api.RerankForestApi' client interface
+2026-02-02T12:02:03.696+08:00  INFO 16336 --- [AgentX] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8088 (http)
+2026-02-02T12:02:03.700+08:00  INFO 16336 --- [AgentX] [main] o.a.catalina.core.AprLifecycleListener   : Loaded Apache Tomcat Native library [2.0.7] using APR version [1.7.4].
+2026-02-02T12:02:03.707+08:00  INFO 16336 --- [AgentX] [main] o.a.catalina.core.AprLifecycleListener   : OpenSSL successfully initialized [OpenSSL 3.0.13 30 Jan 2024]
+2026-02-02T12:02:03.723+08:00  INFO 16336 --- [AgentX] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-02-02T12:02:03.724+08:00  INFO 16336 --- [AgentX] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.19]
+2026-02-02T12:02:03.842+08:00  INFO 16336 --- [AgentX] [main] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2026-02-02T12:02:03.844+08:00  INFO 16336 --- [AgentX] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3085 ms
+2026-02-02T12:02:04.975+08:00  WARN 16336 --- [AgentX] [main] o.x.i.mcp_gateway.MCPGatewayService      : MCP Gateway基础URL未配置 (mcp.gateway.base-url)
+2026-02-02T12:02:04.977+08:00  INFO 16336 --- [AgentX] [main] o.x.i.mcp_gateway.MCPGatewayService      : MCP Gateway服务已初始化，基础URL: null
+2026-02-02T12:02:05.075+08:00  INFO 16336 --- [AgentX] [main] o.x.infrastructure.github.GitHubService  : 使用GitHub访问令牌进行认证访问
+2026-02-02T12:02:06.066+08:00  INFO 16336 --- [AgentX] [main] o.x.infrastructure.github.GitHubService  : GitHub服务已初始化，目标仓库: lucky-aeon/agent-mcp-community
+2026-02-02T12:02:06.206+08:00  INFO 16336 --- [AgentX] [main] o.x.infrastructure.docker.DockerService  : 正在初始化Docker客户端，连接地址: unix:///var/run/docker.sock
+2026-02-02T12:02:06.697+08:00  WARN 16336 --- [AgentX] [main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'adminToolAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\admin\tool\service\AdminToolAppService.class]: Unsatisfied dependency expressed through constructor parameter 1: Error creating bean with name 'toolStateStateMachineAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\tool\service\ToolStateStateMachineAppService.class]: Unsatisfied dependency expressed through constructor parameter 3: Error creating bean with name 'reviewContainerService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\container\service\ReviewContainerService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'containerAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\container\service\ContainerAppService.class]: Unsatisfied dependency expressed through constructor parameter 3: Error creating bean with name 'dockerService': Invocation of init method failed
+2026-02-02T12:02:06.704+08:00  INFO 16336 --- [AgentX] [main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+2026-02-02T12:02:06.721+08:00  INFO 16336 --- [AgentX] [main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-02-02T12:02:06.752+08:00 ERROR 16336 --- [AgentX] [main] o.s.boot.SpringApplication               : Application run failed
+
+org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'adminToolAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\admin\tool\service\AdminToolAppService.class]: Unsatisfied dependency expressed through constructor parameter 1: Error creating bean with name 'toolStateStateMachineAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\tool\service\ToolStateStateMachineAppService.class]: Unsatisfied dependency expressed through constructor parameter 3: Error creating bean with name 'reviewContainerService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\container\service\ReviewContainerService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'containerAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\container\service\ContainerAppService.class]: Unsatisfied dependency expressed through constructor parameter 3: Error creating bean with name 'dockerService': Invocation of init method failed
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:798) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:237) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1355) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1192) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:325) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:323) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:975) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:959) ~[spring-context-6.1.4.jar:6.1.4]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:624) ~[spring-context-6.1.4.jar:6.1.4]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146) ~[spring-boot-3.2.3.jar:3.2.3]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754) ~[spring-boot-3.2.3.jar:3.2.3]
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456) ~[spring-boot-3.2.3.jar:3.2.3]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:334) ~[spring-boot-3.2.3.jar:3.2.3]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1354) ~[spring-boot-3.2.3.jar:3.2.3]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1343) ~[spring-boot-3.2.3.jar:3.2.3]
+	at org.xhy.AgentXApplication.main(AgentXApplication.java:14) ~[classes/:na]
+Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'toolStateStateMachineAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\tool\service\ToolStateStateMachineAppService.class]: Unsatisfied dependency expressed through constructor parameter 3: Error creating bean with name 'reviewContainerService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\container\service\ReviewContainerService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'containerAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\container\service\ContainerAppService.class]: Unsatisfied dependency expressed through constructor parameter 3: Error creating bean with name 'dockerService': Invocation of init method failed
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:798) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:237) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1355) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1192) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:325) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:323) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:254) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1443) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1353) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:907) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:785) ~[spring-beans-6.1.4.jar:6.1.4]
+	... 19 common frames omitted
+Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'reviewContainerService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\container\service\ReviewContainerService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'containerAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\container\service\ContainerAppService.class]: Unsatisfied dependency expressed through constructor parameter 3: Error creating bean with name 'dockerService': Invocation of init method failed
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:798) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:237) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1355) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1192) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:325) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:323) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:254) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1443) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1353) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:907) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:785) ~[spring-beans-6.1.4.jar:6.1.4]
+	... 33 common frames omitted
+Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'containerAppService' defined in file [D:\develop\idea\idea\idea_workspace\agent\target\classes\org\xhy\application\container\service\ContainerAppService.class]: Unsatisfied dependency expressed through constructor parameter 3: Error creating bean with name 'dockerService': Invocation of init method failed
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:798) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:237) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1355) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1192) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:325) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:323) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:254) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1443) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1353) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:907) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:785) ~[spring-beans-6.1.4.jar:6.1.4]
+	... 47 common frames omitted
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'dockerService': Invocation of init method failed
+	at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor.postProcessBeforeInitialization(InitDestroyAnnotationBeanPostProcessor.java:222) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.applyBeanPostProcessorsBeforeInitialization(AbstractAutowireCapableBeanFactory.java:422) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1778) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:600) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:325) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:323) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:254) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1443) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1353) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:907) ~[spring-beans-6.1.4.jar:6.1.4]
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:785) ~[spring-beans-6.1.4.jar:6.1.4]
+	... 61 common frames omitted
+Caused by: java.lang.UnsatisfiedLinkError: Error looking up function 'socket': 找不到指定的程序。
 
 	at com.sun.jna.Function.<init>(Function.java:252) ~[jna-5.13.0.jar:5.13.0 (b0)]
 	at com.sun.jna.NativeLibrary.getFunction(NativeLibrary.java:620) ~[jna-5.13.0.jar:5.13.0 (b0)]
