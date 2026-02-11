@@ -112,6 +112,8 @@ public class AuthSettingDomainService {
      * @param entity 认证配置实体
      * @return 更新后的配置 */
     public AuthSettingEntity updateAuthSetting(AuthSettingEntity entity) {
+        AuthSettingEntity existingEntity = getById(entity.getId());
+        // 这里不能删，需要检测原本的entity是否存在
         LambdaUpdateWrapper<AuthSettingEntity> updateWrapper = Wrappers.<AuthSettingEntity>lambdaUpdate()
                 .eq(AuthSettingEntity::getId, entity.getId());
 
