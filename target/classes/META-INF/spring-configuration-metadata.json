@@ -1,0 +1,533 @@
+{
+  "groups": [
+    {
+      "name": "agentx",
+      "type": "org.xhy.infrastructure.config.AdminUserProperties",
+      "sourceType": "org.xhy.infrastructure.config.AdminUserProperties"
+    },
+    {
+      "name": "agentx.admin",
+      "type": "org.xhy.infrastructure.config.AdminUserProperties$AdminConfig",
+      "sourceType": "org.xhy.infrastructure.config.AdminUserProperties",
+      "sourceMethod": "public org.xhy.infrastructure.config.AdminUserProperties.AdminConfig getAdmin() "
+    },
+    {
+      "name": "agentx.container",
+      "type": "org.xhy.infrastructure.config.ContainerConfig",
+      "sourceType": "org.xhy.infrastructure.config.ContainerConfig"
+    },
+    {
+      "name": "agentx.test",
+      "type": "org.xhy.infrastructure.config.AdminUserProperties$TestConfig",
+      "sourceType": "org.xhy.infrastructure.config.AdminUserProperties",
+      "sourceMethod": "public org.xhy.infrastructure.config.AdminUserProperties.TestConfig getTest() "
+    },
+    {
+      "name": "app.rate-limit",
+      "type": "org.xhy.infrastructure.ratelimit.config.RateLimitConfig",
+      "sourceType": "org.xhy.infrastructure.ratelimit.config.RateLimitConfig"
+    },
+    {
+      "name": "app.rate-limit.recharge",
+      "type": "org.xhy.infrastructure.ratelimit.config.RateLimitConfig$Recharge",
+      "sourceType": "org.xhy.infrastructure.ratelimit.config.RateLimitConfig",
+      "sourceMethod": "public org.xhy.infrastructure.ratelimit.config.RateLimitConfig.Recharge getRecharge() "
+    },
+    {
+      "name": "embedding",
+      "type": "org.xhy.infrastructure.rag.config.EmbeddingProperties",
+      "sourceType": "org.xhy.infrastructure.rag.config.EmbeddingProperties"
+    },
+    {
+      "name": "embedding.vector-store",
+      "type": "org.xhy.infrastructure.rag.config.EmbeddingProperties$VectorStore",
+      "sourceType": "org.xhy.infrastructure.rag.config.EmbeddingProperties",
+      "sourceMethod": "public org.xhy.infrastructure.rag.config.EmbeddingProperties.VectorStore getVectorStore() "
+    },
+    {
+      "name": "github",
+      "type": "org.xhy.infrastructure.config.GitHubProperties",
+      "sourceType": "org.xhy.infrastructure.config.GitHubProperties"
+    },
+    {
+      "name": "github.target",
+      "type": "org.xhy.infrastructure.config.GitHubProperties$Target",
+      "sourceType": "org.xhy.infrastructure.config.GitHubProperties",
+      "sourceMethod": "public org.xhy.infrastructure.config.GitHubProperties.Target getTarget() "
+    },
+    {
+      "name": "high-availability",
+      "type": "org.xhy.infrastructure.config.HighAvailabilityProperties",
+      "sourceType": "org.xhy.infrastructure.config.HighAvailabilityProperties"
+    },
+    {
+      "name": "mcp.gateway",
+      "type": "org.xhy.infrastructure.config.MCPGatewayProperties",
+      "sourceType": "org.xhy.infrastructure.config.MCPGatewayProperties"
+    },
+    {
+      "name": "memory.embedding",
+      "type": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties",
+      "sourceType": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties"
+    },
+    {
+      "name": "memory.embedding.vector-store",
+      "type": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties$VectorStore",
+      "sourceType": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties",
+      "sourceMethod": "public org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties.VectorStore getVectorStore() "
+    },
+    {
+      "name": "oss",
+      "type": "org.xhy.infrastructure.config.OssProperties",
+      "sourceType": "org.xhy.infrastructure.config.OssProperties"
+    },
+    {
+      "name": "rag.markdown",
+      "type": "org.xhy.infrastructure.rag.config.MarkdownProcessorProperties",
+      "sourceType": "org.xhy.infrastructure.rag.config.MarkdownProcessorProperties"
+    },
+    {
+      "name": "rag.markdown.segment-split",
+      "type": "org.xhy.infrastructure.rag.config.MarkdownProcessorProperties$SegmentSplit",
+      "sourceType": "org.xhy.infrastructure.rag.config.MarkdownProcessorProperties",
+      "sourceMethod": "public org.xhy.infrastructure.rag.config.MarkdownProcessorProperties.SegmentSplit getSegmentSplit() "
+    },
+    {
+      "name": "rerank",
+      "type": "org.xhy.infrastructure.rag.config.RerankProperties",
+      "sourceType": "org.xhy.infrastructure.rag.config.RerankProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "agentx.admin.email",
+      "type": "java.lang.String",
+      "description": "管理员邮箱",
+      "sourceType": "org.xhy.infrastructure.config.AdminUserProperties$AdminConfig"
+    },
+    {
+      "name": "agentx.admin.nickname",
+      "type": "java.lang.String",
+      "description": "管理员昵称",
+      "sourceType": "org.xhy.infrastructure.config.AdminUserProperties$AdminConfig"
+    },
+    {
+      "name": "agentx.admin.password",
+      "type": "java.lang.String",
+      "description": "管理员密码",
+      "sourceType": "org.xhy.infrastructure.config.AdminUserProperties$AdminConfig"
+    },
+    {
+      "name": "agentx.container.default-mcp-gateway-image",
+      "type": "java.lang.String",
+      "description": "默认MCP网关镜像",
+      "sourceType": "org.xhy.infrastructure.config.ContainerConfig"
+    },
+    {
+      "name": "agentx.container.docker-host",
+      "type": "java.lang.String",
+      "description": "Docker连接配置",
+      "sourceType": "org.xhy.infrastructure.config.ContainerConfig"
+    },
+    {
+      "name": "agentx.container.monitor-interval",
+      "type": "java.lang.Long",
+      "description": "容器监控间隔（毫秒）",
+      "sourceType": "org.xhy.infrastructure.config.ContainerConfig"
+    },
+    {
+      "name": "agentx.container.stats-update-interval",
+      "type": "java.lang.Long",
+      "description": "资源使用率更新间隔（毫秒）",
+      "sourceType": "org.xhy.infrastructure.config.ContainerConfig"
+    },
+    {
+      "name": "agentx.container.user-volume-base-path",
+      "type": "java.lang.String",
+      "description": "用户数据卷基础路径",
+      "sourceType": "org.xhy.infrastructure.config.ContainerConfig"
+    },
+    {
+      "name": "agentx.test.email",
+      "type": "java.lang.String",
+      "description": "测试用户邮箱",
+      "sourceType": "org.xhy.infrastructure.config.AdminUserProperties$TestConfig"
+    },
+    {
+      "name": "agentx.test.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用测试用户",
+      "sourceType": "org.xhy.infrastructure.config.AdminUserProperties$TestConfig"
+    },
+    {
+      "name": "agentx.test.nickname",
+      "type": "java.lang.String",
+      "description": "测试用户昵称",
+      "sourceType": "org.xhy.infrastructure.config.AdminUserProperties$TestConfig"
+    },
+    {
+      "name": "agentx.test.password",
+      "type": "java.lang.String",
+      "description": "测试用户密码",
+      "sourceType": "org.xhy.infrastructure.config.AdminUserProperties$TestConfig"
+    },
+    {
+      "name": "app.rate-limit.recharge.cleanup-interval-minutes",
+      "type": "java.lang.Integer",
+      "description": "缓存清理间隔（分钟）",
+      "sourceType": "org.xhy.infrastructure.ratelimit.config.RateLimitConfig$Recharge"
+    },
+    {
+      "name": "app.rate-limit.recharge.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用限流",
+      "sourceType": "org.xhy.infrastructure.ratelimit.config.RateLimitConfig$Recharge"
+    },
+    {
+      "name": "app.rate-limit.recharge.max-cached-users",
+      "type": "java.lang.Integer",
+      "description": "限流器缓存的最大用户数",
+      "sourceType": "org.xhy.infrastructure.ratelimit.config.RateLimitConfig$Recharge"
+    },
+    {
+      "name": "app.rate-limit.recharge.permits-per-second",
+      "type": "java.lang.Double",
+      "description": "每秒允许的请求数（每分钟60次）",
+      "sourceType": "org.xhy.infrastructure.ratelimit.config.RateLimitConfig$Recharge"
+    },
+    {
+      "name": "embedding.api-key",
+      "type": "java.lang.String",
+      "description": "API密钥",
+      "sourceType": "org.xhy.infrastructure.rag.config.EmbeddingProperties"
+    },
+    {
+      "name": "embedding.api-url",
+      "type": "java.lang.String",
+      "description": "API URL",
+      "sourceType": "org.xhy.infrastructure.rag.config.EmbeddingProperties"
+    },
+    {
+      "name": "embedding.model",
+      "type": "java.lang.String",
+      "description": "使用的模型名称",
+      "sourceType": "org.xhy.infrastructure.rag.config.EmbeddingProperties"
+    },
+    {
+      "name": "embedding.name",
+      "type": "java.lang.String",
+      "description": "嵌入服务名称",
+      "sourceType": "org.xhy.infrastructure.rag.config.EmbeddingProperties"
+    },
+    {
+      "name": "embedding.timeout",
+      "type": "java.lang.Integer",
+      "description": "请求超时时间(毫秒)",
+      "sourceType": "org.xhy.infrastructure.rag.config.EmbeddingProperties"
+    },
+    {
+      "name": "embedding.vector-store.create-table",
+      "type": "java.lang.Boolean",
+      "description": "是否创建表",
+      "sourceType": "org.xhy.infrastructure.rag.config.EmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "embedding.vector-store.database",
+      "type": "java.lang.String",
+      "description": "数据库名",
+      "sourceType": "org.xhy.infrastructure.rag.config.EmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "embedding.vector-store.dimension",
+      "type": "java.lang.Integer",
+      "description": "向量维度",
+      "sourceType": "org.xhy.infrastructure.rag.config.EmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "embedding.vector-store.drop-table-first",
+      "type": "java.lang.Boolean",
+      "description": "是否先删除表",
+      "sourceType": "org.xhy.infrastructure.rag.config.EmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "embedding.vector-store.host",
+      "type": "java.lang.String",
+      "description": "数据库主机地址",
+      "sourceType": "org.xhy.infrastructure.rag.config.EmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "embedding.vector-store.password",
+      "type": "java.lang.String",
+      "description": "数据库密码",
+      "sourceType": "org.xhy.infrastructure.rag.config.EmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "embedding.vector-store.port",
+      "type": "java.lang.Integer",
+      "description": "数据库端口",
+      "sourceType": "org.xhy.infrastructure.rag.config.EmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "embedding.vector-store.table",
+      "type": "java.lang.String",
+      "description": "向量表名",
+      "sourceType": "org.xhy.infrastructure.rag.config.EmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "embedding.vector-store.user",
+      "type": "java.lang.String",
+      "description": "数据库用户名",
+      "sourceType": "org.xhy.infrastructure.rag.config.EmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "github.target.repo-name",
+      "type": "java.lang.String",
+      "sourceType": "org.xhy.infrastructure.config.GitHubProperties$Target"
+    },
+    {
+      "name": "github.target.token",
+      "type": "java.lang.String",
+      "sourceType": "org.xhy.infrastructure.config.GitHubProperties$Target"
+    },
+    {
+      "name": "github.target.username",
+      "type": "java.lang.String",
+      "sourceType": "org.xhy.infrastructure.config.GitHubProperties$Target"
+    },
+    {
+      "name": "high-availability.api-key",
+      "type": "java.lang.String",
+      "description": "API密钥",
+      "sourceType": "org.xhy.infrastructure.config.HighAvailabilityProperties"
+    },
+    {
+      "name": "high-availability.connect-timeout",
+      "type": "java.lang.Integer",
+      "description": "连接超时时间(毫秒)，默认30秒",
+      "sourceType": "org.xhy.infrastructure.config.HighAvailabilityProperties"
+    },
+    {
+      "name": "high-availability.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用高可用功能",
+      "sourceType": "org.xhy.infrastructure.config.HighAvailabilityProperties"
+    },
+    {
+      "name": "high-availability.gateway-url",
+      "type": "java.lang.String",
+      "description": "高可用网关基础URL",
+      "sourceType": "org.xhy.infrastructure.config.HighAvailabilityProperties"
+    },
+    {
+      "name": "high-availability.read-timeout",
+      "type": "java.lang.Integer",
+      "description": "读取超时时间(毫秒)，默认60秒",
+      "sourceType": "org.xhy.infrastructure.config.HighAvailabilityProperties"
+    },
+    {
+      "name": "mcp.gateway.api-key",
+      "type": "java.lang.String",
+      "sourceType": "org.xhy.infrastructure.config.MCPGatewayProperties"
+    },
+    {
+      "name": "mcp.gateway.base-url",
+      "type": "java.lang.String",
+      "sourceType": "org.xhy.infrastructure.config.MCPGatewayProperties"
+    },
+    {
+      "name": "mcp.gateway.connect-timeout",
+      "type": "java.lang.Integer",
+      "sourceType": "org.xhy.infrastructure.config.MCPGatewayProperties"
+    },
+    {
+      "name": "mcp.gateway.read-timeout",
+      "type": "java.lang.Integer",
+      "sourceType": "org.xhy.infrastructure.config.MCPGatewayProperties"
+    },
+    {
+      "name": "memory.embedding.api-key",
+      "type": "java.lang.String",
+      "sourceType": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties"
+    },
+    {
+      "name": "memory.embedding.api-url",
+      "type": "java.lang.String",
+      "sourceType": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties"
+    },
+    {
+      "name": "memory.embedding.model",
+      "type": "java.lang.String",
+      "sourceType": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties"
+    },
+    {
+      "name": "memory.embedding.name",
+      "type": "java.lang.String",
+      "sourceType": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties"
+    },
+    {
+      "name": "memory.embedding.timeout",
+      "type": "java.lang.Integer",
+      "sourceType": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties"
+    },
+    {
+      "name": "memory.embedding.vector-store.create-table",
+      "type": "java.lang.Boolean",
+      "sourceType": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "memory.embedding.vector-store.database",
+      "type": "java.lang.String",
+      "sourceType": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "memory.embedding.vector-store.dimension",
+      "type": "java.lang.Integer",
+      "sourceType": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "memory.embedding.vector-store.drop-table-first",
+      "type": "java.lang.Boolean",
+      "sourceType": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "memory.embedding.vector-store.host",
+      "type": "java.lang.String",
+      "sourceType": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "memory.embedding.vector-store.password",
+      "type": "java.lang.String",
+      "sourceType": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "memory.embedding.vector-store.port",
+      "type": "java.lang.Integer",
+      "sourceType": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "memory.embedding.vector-store.table",
+      "type": "java.lang.String",
+      "sourceType": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "memory.embedding.vector-store.user",
+      "type": "java.lang.String",
+      "sourceType": "org.xhy.infrastructure.memory.config.MemoryEmbeddingProperties$VectorStore"
+    },
+    {
+      "name": "oss.access-key",
+      "type": "java.lang.String",
+      "description": "访问密钥",
+      "sourceType": "org.xhy.infrastructure.config.OssProperties"
+    },
+    {
+      "name": "oss.bucket-name",
+      "type": "java.lang.String",
+      "description": "存储桶名称",
+      "sourceType": "org.xhy.infrastructure.config.OssProperties"
+    },
+    {
+      "name": "oss.custom-domain",
+      "type": "java.lang.String",
+      "description": "自定义域名",
+      "sourceType": "org.xhy.infrastructure.config.OssProperties"
+    },
+    {
+      "name": "oss.endpoint",
+      "type": "java.lang.String",
+      "description": "访问端点",
+      "sourceType": "org.xhy.infrastructure.config.OssProperties"
+    },
+    {
+      "name": "oss.path-style-access",
+      "type": "java.lang.Boolean",
+      "description": "启用路径样式访问",
+      "sourceType": "org.xhy.infrastructure.config.OssProperties"
+    },
+    {
+      "name": "oss.region",
+      "type": "java.lang.String",
+      "description": "区域",
+      "sourceType": "org.xhy.infrastructure.config.OssProperties"
+    },
+    {
+      "name": "oss.secret-key",
+      "type": "java.lang.String",
+      "description": "秘密密钥",
+      "sourceType": "org.xhy.infrastructure.config.OssProperties"
+    },
+    {
+      "name": "oss.url-prefix",
+      "type": "java.lang.String",
+      "description": "文件访问URL前缀",
+      "sourceType": "org.xhy.infrastructure.config.OssProperties"
+    },
+    {
+      "name": "rag.markdown.segment-split.buffer-size",
+      "type": "java.lang.Integer",
+      "description": "安全缓冲区大小",
+      "sourceType": "org.xhy.infrastructure.rag.config.MarkdownProcessorProperties$SegmentSplit"
+    },
+    {
+      "name": "rag.markdown.segment-split.enable-overlap",
+      "type": "java.lang.Boolean",
+      "description": "是否启用重叠分段",
+      "sourceType": "org.xhy.infrastructure.rag.config.MarkdownProcessorProperties$SegmentSplit"
+    },
+    {
+      "name": "rag.markdown.segment-split.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用段落拆分",
+      "sourceType": "org.xhy.infrastructure.rag.config.MarkdownProcessorProperties$SegmentSplit"
+    },
+    {
+      "name": "rag.markdown.segment-split.max-length",
+      "type": "java.lang.Integer",
+      "description": "最大段落字符数",
+      "sourceType": "org.xhy.infrastructure.rag.config.MarkdownProcessorProperties$SegmentSplit"
+    },
+    {
+      "name": "rag.markdown.segment-split.min-length",
+      "type": "java.lang.Integer",
+      "description": "最小段落字符数",
+      "sourceType": "org.xhy.infrastructure.rag.config.MarkdownProcessorProperties$SegmentSplit"
+    },
+    {
+      "name": "rag.markdown.segment-split.overlap-size",
+      "type": "java.lang.Integer",
+      "description": "重叠区域大小",
+      "sourceType": "org.xhy.infrastructure.rag.config.MarkdownProcessorProperties$SegmentSplit"
+    },
+    {
+      "name": "rerank.api-key",
+      "type": "java.lang.String",
+      "description": "API密钥",
+      "sourceType": "org.xhy.infrastructure.rag.config.RerankProperties"
+    },
+    {
+      "name": "rerank.api-url",
+      "type": "java.lang.String",
+      "description": "API URL",
+      "sourceType": "org.xhy.infrastructure.rag.config.RerankProperties"
+    },
+    {
+      "name": "rerank.model",
+      "type": "java.lang.String",
+      "description": "使用的模型名称",
+      "sourceType": "org.xhy.infrastructure.rag.config.RerankProperties"
+    },
+    {
+      "name": "rerank.name",
+      "type": "java.lang.String",
+      "description": "嵌入服务名称",
+      "sourceType": "org.xhy.infrastructure.rag.config.RerankProperties"
+    },
+    {
+      "name": "rerank.timeout",
+      "type": "java.lang.Integer",
+      "description": "请求超时时间(毫秒)",
+      "sourceType": "org.xhy.infrastructure.rag.config.RerankProperties"
+    }
+  ],
+  "hints": []
+}
