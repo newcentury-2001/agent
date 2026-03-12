@@ -126,6 +126,14 @@ public class RagDocConsumer {
             // 自动启动向量化处理
             autoStartVectorization(docMessage.getFileId(), fileEntity);
 
+            // 成功处理消息，确认消息
+            try {
+                if (channel != null && channel.isOpen()) {
+                    channel.basicAck(deliveryTag, false);
+                }
+            } catch (Exception ackException) {
+                log.error("确认消息失败", ackException);
+            }
         } catch (Exception e) {
             log.error("OCR处理失败，文件ID: {}", docMessage != null ? docMessage.getFileId() : "unknown", e);
             // 处理失败
@@ -138,8 +146,14 @@ public class RagDocConsumer {
             } catch (Exception ex) {
                 log.error("更新文件状态为失败失败，文件ID: {}", docMessage != null ? docMessage.getFileId() : "unknown", ex);
             }
-        } finally {
-            channel.basicAck(deliveryTag, false);
+            // 处理失败，拒绝消息并重新入队
+            try {
+                if (channel != null && channel.isOpen()) {
+                    channel.basicNack(deliveryTag, false, true);
+                }
+            } catch (Exception nackException) {
+                log.error("拒绝消息失败", nackException);
+            }
         }
     }
 

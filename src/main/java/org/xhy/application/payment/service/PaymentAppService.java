@@ -74,25 +74,18 @@ public class PaymentAppService {
         OrderEntity order = createRechargeOrder(userId, request, paymentPlatform, paymentType);
 
         try {
-            // 发起支付
-            PaymentResult paymentResult = createPaymentWithProvider(order, request, paymentPlatform);
+            // 直接更新数据库，不请求支付宝服务
+            directUpdateOrderAsPaid(order);
 
-            if (!paymentResult.isSuccess()) {
-                logger.error("充值支付创建失败: userId={}, orderId={}, error={}", userId, order.getId(),
-                        paymentResult.getErrorMessage());
-                throw new BusinessException("支付创建失败: " + paymentResult.getErrorMessage());
-            }
-
-            // 更新订单的支付平台信息
-            updateOrderProviderInfo(order, paymentResult);
+            // 构建支付结果
+            PaymentResult paymentResult = buildDirectPaymentResult(order);
 
             // 构建并返回响应
             PaymentResponseDTO response = PaymentAssembler.toPaymentResponseDTO(order, paymentResult);
 
             logger.info(
-                    "充值支付创建成功: userId={}, orderId={}, amount={}, platform={}, type={}, providerOrderId={}, providerPaymentId={}",
-                    userId, order.getId(), request.getAmount(), paymentPlatform, paymentType,
-                    order.getProviderOrderId(), order.getProviderOrderId());
+                    "充值支付成功（直接更新数据库）: userId={}, orderId={}, amount={}, platform={}, type={}",
+                    userId, order.getId(), request.getAmount(), paymentPlatform, paymentType);
 
             return response;
 
@@ -100,6 +93,42 @@ public class PaymentAppService {
             logger.error("充值支付处理异常: userId={}, orderId={}", userId, order.getId(), e);
             throw new BusinessException("支付处理失败: " + e.getMessage());
         }
+    }
+
+    /** 直接更新订单为已支付状态
+     * 
+     * @param order 订单实体 */
+    private void directUpdateOrderAsPaid(OrderEntity order) {
+        // 设置支付平台订单ID（模拟）
+        String simulatedProviderOrderId = "SIM_" + order.getOrderNo();
+        order.setProviderOrderId(simulatedProviderOrderId);
+
+        // 更新订单状态为已支付
+        orderDomainService.updateOrderStatusAndProviderInfo(order.getId(), OrderStatus.PAID, simulatedProviderOrderId);
+
+        // 更新内存中的订单对象
+        order.setStatus(OrderStatus.PAID);
+        order.setPaidAt(java.time.LocalDateTime.now());
+
+        // 发布购买成功事件
+        PurchaseSuccessEvent event = new PurchaseSuccessEvent(order);
+        eventPublisher.publishEvent(event);
+
+        logger.info("订单已直接更新为已支付状态: orderId={}, orderNo={}, providerOrderId={}", order.getId(),
+                order.getOrderNo(), simulatedProviderOrderId);
+    }
+
+    /** 构建直接支付的结果
+     * 
+     * @param order 订单实体
+     * @return 支付结果 */
+    private PaymentResult buildDirectPaymentResult(OrderEntity order) {
+        PaymentResult result = PaymentResult.success();
+        result.setProviderOrderId(order.getProviderOrderId());
+        result.setPaymentMethod("ALIPAY");
+        result.setPaymentType(order.getPaymentType().getCode());
+        result.setPaymentUrl("https://www.bilibili.com/video/BV1nL8NzkEaH/?spm_id_from=333.1007.tianma.1-3-3.click&vd_source=884a1f9702167e8936a8d6d773a193ae/api/payments/success");
+        return result;
     }
 
     /** 创建充值订单 */
@@ -210,24 +239,33 @@ public class PaymentAppService {
     @Transactional
     public String handlePaymentCallback(PaymentPlatform paymentPlatform, HttpServletRequest request) {
         try {
-            // 获取支付提供商
-            PaymentProvider provider = paymentProviderFactory.getProvider(paymentPlatform);
-
-            // 使用新的处理方式：直接传递HttpServletRequest
-            PaymentCallback callback = provider.handleCallback(request);
-
-            if (callback.isSignatureValid()) {
-                // 更新订单状态
-                updateOrderStatus(callback);
-
-                logger.info("支付回调处理成功: platform={}, orderNo={}, success={}", paymentPlatform, callback.getOrderNo(),
-                        callback.isPaymentSuccess());
-            } else {
-                logger.warn("支付回调验签失败: platform={}, orderNo={}", paymentPlatform, callback.getOrderNo());
+            // 直接更新订单状态为已支付，不验证签名
+            String orderNo = request.getParameter("out_trade_no");
+            if (orderNo == null || orderNo.trim().isEmpty()) {
+                logger.warn("回调中没有订单号信息");
+                return "failure";
             }
 
-            // 返回平台要求的响应格式
-            return provider.getCallbackResponse(callback.isSignatureValid() && callback.isPaymentSuccess());
+            // 根据订单号获取订单
+            OrderEntity order = orderDomainService.findOrderByOrderNo(orderNo);
+            if (order == null) {
+                logger.warn("订单不存在: orderNo={}", orderNo);
+                return "failure";
+            }
+
+            // 检查订单状态是否可以更新
+            if (order.getStatus() != OrderStatus.PENDING) {
+                logger.info("订单状态已更新，跳过处理: orderNo={}, currentStatus={}", orderNo, order.getStatus());
+                return "success";
+            }
+
+            // 直接更新订单状态为已支付
+            directUpdateOrderAsPaid(order);
+
+            logger.info("支付回调处理成功（直接更新）: platform={}, orderNo={}", paymentPlatform, orderNo);
+
+            // 返回成功响应
+            return "success";
 
         } catch (Exception e) {
             logger.error("支付回调处理异常: platform={}", paymentPlatform, e);
@@ -309,10 +347,7 @@ public class PaymentAppService {
             // 1. 获取订单
             OrderEntity order = getOrderOrThrow(orderNo);
 
-            // 2. 同步支付平台状态（如果需要）
-            if (shouldSyncWithProvider(order)) {
-                syncOrderStatusFromProvider(order);
-            }
+            // 2. 不再同步支付平台状态，直接返回本地订单状态
 
             // 3. 构建响应
             return buildOrderStatusResponse(order);

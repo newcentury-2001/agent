@@ -37,7 +37,10 @@ public class RerankDomainService {
         }
 
         if (query == null || query.trim().isEmpty()) {
-            // 如果查询为空，返回原始顺序索引
+            return documents.stream().map(documents::indexOf).collect(Collectors.toList());
+        }
+
+        if (rerankProperties.getApiUrl() == null || rerankProperties.getApiUrl().trim().isEmpty()) {
             return documents.stream().map(documents::indexOf).collect(Collectors.toList());
         }
 
@@ -47,7 +50,6 @@ public class RerankDomainService {
         rerankRequest.setDocuments(documents);
 
         try {
-            // 调用Forest接口调用Rerank API
             final RerankResponse rerankResponse = rerankForestApi.rerank(rerankProperties.getApiUrl(),
                     rerankProperties.getApiKey(), rerankRequest);
 
@@ -56,7 +58,6 @@ public class RerankDomainService {
             return results.stream().map(RerankResponse.SearchResult::getIndex).collect(Collectors.toList());
 
         } catch (Exception e) {
-            // 重排序失败时返回原始顺序
             return documents.stream().map(documents::indexOf).collect(Collectors.toList());
         }
     }

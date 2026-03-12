@@ -76,10 +76,25 @@ public class RagDocStorageConsumer {
             updateEmbeddingProgress(mqRecordReqDTO);
 
             log.info("当前文件 {} 第{}页 ———— 向量化完成", mqRecordReqDTO.getFileName(), mqRecordReqDTO.getPage());
+            
+            // 成功处理消息，确认消息
+            try {
+                if (channel != null && channel.isOpen()) {
+                    channel.basicAck(deliveryTag, false);
+                }
+            } catch (Exception ackException) {
+                log.error("确认消息失败", ackException);
+            }
         } catch (Exception e) {
             log.error("向量化过程中发生异常", e);
-        } finally {
-            channel.basicAck(deliveryTag, false);
+            // 处理失败，拒绝消息并重新入队
+            try {
+                if (channel != null && channel.isOpen()) {
+                    channel.basicNack(deliveryTag, false, true);
+                }
+            } catch (Exception nackException) {
+                log.error("拒绝消息失败", nackException);
+            }
         }
     }
 

@@ -48,9 +48,9 @@ public class RagFileStorageStrategy implements FileStorageStrategy {
     public boolean save(FileInfo fileInfo) {
         try {
             FileDetailEntity fileDetailEntity = convertToFileDetailEntity(fileInfo);
-            fileDetailRepository.checkInsert(fileDetailEntity);
-
-            // 回写ID到原对象（第三方库需要）
+            
+            // 本地存储不支持metadata，直接返回true
+            // 数据库保存由FileDetailDomainService.uploadFileToDataset()处理
             fileInfo.setId(fileDetailEntity.getId());
 
             return true;
@@ -124,6 +124,34 @@ public class RagFileStorageStrategy implements FileStorageStrategy {
             fileDetailEntity.setDataSetId(fileInfo.getMetadata().get("dataset"));
             fileDetailEntity.setUserId(fileInfo.getMetadata().get("userid"));
         }
+
+        // 转换元数据为JSON字符串
+        fileDetailEntity.setMetadata(valueToJson(fileInfo.getMetadata()));
+        fileDetailEntity.setUserMetadata(valueToJson(fileInfo.getUserMetadata()));
+        fileDetailEntity.setThMetadata(valueToJson(fileInfo.getThMetadata()));
+        fileDetailEntity.setThUserMetadata(valueToJson(fileInfo.getThUserMetadata()));
+
+        // 转换附加属性和哈希信息
+        fileDetailEntity.setAttr(valueToJson(fileInfo.getAttr()));
+        fileDetailEntity.setHashInfo(valueToJson(fileInfo.getHashInfo()));
+
+        // RAG文件设置特定的处理状态
+        fileDetailEntity.setProcessingStatus(FileProcessingStatusEnum.UPLOADED.getCode());
+
+        return fileDetailEntity;
+    }
+
+    /** 将FileInfo转换为FileDetailEntity（保留原有业务信息）
+     * @param fileInfo 文件信息
+     * @param originalEntity 原始实体（保留dataset和userId）
+     * @return 文件实体 */
+    private FileDetailEntity convertToFileDetailEntity(FileInfo fileInfo, FileDetailEntity originalEntity) throws JsonProcessingException {
+        FileDetailEntity fileDetailEntity = BeanUtil.copyProperties(fileInfo, FileDetailEntity.class, "metadata",
+                "userMetadata", "thMetadata", "thUserMetadata", "attr", "hashInfo");
+
+        // 保留原有的业务信息
+        fileDetailEntity.setDataSetId(originalEntity.getDataSetId());
+        fileDetailEntity.setUserId(originalEntity.getUserId());
 
         // 转换元数据为JSON字符串
         fileDetailEntity.setMetadata(valueToJson(fileInfo.getMetadata()));

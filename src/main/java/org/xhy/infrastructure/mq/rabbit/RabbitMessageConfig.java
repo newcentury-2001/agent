@@ -38,11 +38,11 @@ public class RabbitMessageConfig {
      * @param connectionFactory RabbitMQ 连接工厂
      * @return 监听器容器工厂 */
     @Bean
-    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {
+    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory,MessageConverter jsonMessageConverter) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         // 设置 JSON 消息转换器
-        factory.setMessageConverter(jsonMessageConverter());
+        factory.setMessageConverter(jsonMessageConverter);
         return factory;
     }
 }

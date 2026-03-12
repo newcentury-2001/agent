@@ -13,40 +13,68 @@ server:
 spring:
   application:
     name: AgentX
+  # 健康检查配置
+  boot:
+    admin:
+      client:
+        enabled: false
+  # 重试配置
+  retry:
+    max-attempts: 3
+    backoff:
+      initial-interval: 1000
+      multiplier: 2.0
+      max-interval: 10000
   rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
+    host: ${RABBITMQ_HOST:192.168.72.100}
     port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USERNAME:guest}
-    password: ${RABBITMQ_PASSWORD:guest}
+    username: ${RABBITMQ_USERNAME:agentx}
+    password: ${RABBITMQ_PASSWORD:agentx}
+    virtual-host: /
     listener:
       simple: # 添加 simple 下的并发配置
-        concurrency: 19
-        max-concurrency: 19
-        prefetch: 1
+        concurrency: 10
+        max-concurrency: 20
+        prefetch: 5
         acknowledge-mode: manual
         default-requeue-rejected: true
         retry:
           enabled: true
-          max-attempts: 3
-          initial-interval: 3000
+          max-attempts: 5
+          initial-interval: 5000
+          multiplier: 2.0
+          max-interval: 30000
       direct:
         acknowledge-mode: manual
         default-requeue-rejected: true
         retry:
           enabled: true
-          max-attempts: 3
-          initial-interval: 3000
+          max-attempts: 5
+          initial-interval: 5000
+          multiplier: 2.0
+          max-interval: 30000
     publisher-returns: true
     publisher-confirm-type: correlated
-    connection-timeout: 200000
+    connection-timeout: 30000
     cache:
       channel:
-        size: 25 # 添加通道缓存大小
+        size: 50
+      connection:
+        mode: channel
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:agentx}
+    url: jdbc:postgresql://${DB_HOST:192.168.72.100}:${DB_PORT:5432}/${DB_NAME:postgres}
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+      validation-timeout: 5000
+      leak-detection-threshold: 60000
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
@@ -99,25 +127,25 @@ high-availability:
 embedding:
   name: OpenAI
   vector-store:
-    host: ${VECTOR_DB_HOST:${DB_HOST:localhost}}
-    port: ${VECTOR_DB_PORT:${DB_PORT:5432}}
-    user: ${VECTOR_DB_USER:${DB_USER:postgres}}
-    password: ${VECTOR_DB_PASSWORD:${DB_PASSWORD:postgres}}
-    database: ${VECTOR_DB_NAME:${DB_NAME:agentx}}
-    table: ${VECTOR_DB_TABLE:public.vector_store}
-    dimension: ${VECTOR_DB_DIMENSION:1024}
-    drop-table-first: ${VECTOR_DB_DROP_TABLE_FIRST:false}
-    create-table: ${VECTOR_DB_CREATE_TABLE:true}
+      host: ${VECTOR_DB_HOST:${DB_HOST:192.168.72.100}}
+      port: ${VECTOR_DB_PORT:${DB_PORT:5432}}
+      user: ${VECTOR_DB_USER:${DB_USER:postgres}}
+      password: ${VECTOR_DB_PASSWORD:${DB_PASSWORD:postgres}}
+      database: ${VECTOR_DB_NAME:${DB_NAME:postgres}}
+      table: ${VECTOR_DB_TABLE:public.vector_store}
+      dimension: ${VECTOR_DB_DIMENSION:1024}
+      drop-table-first: ${VECTOR_DB_DROP_TABLE_FIRST:false}
+      create-table: ${VECTOR_DB_CREATE_TABLE:true}
 
 # Memory 向量存储配置（独立于知识库向量库）
 memory:
   embedding:
     vector-store:
-      host: ${VECTOR_DB_HOST:${DB_HOST:localhost}}
+      host: ${VECTOR_DB_HOST:${DB_HOST:192.168.72.100}}
       port: ${VECTOR_DB_PORT:${DB_PORT:5432}}
       user: ${VECTOR_DB_USER:${DB_USER:postgres}}
       password: ${VECTOR_DB_PASSWORD:${DB_PASSWORD:postgres}}
-      database: ${VECTOR_DB_NAME:${DB_NAME:agentx}}
+      database: ${VECTOR_DB_NAME:${DB_NAME:postgres}}
       table: ${MEMORY_VECTOR_DB_TABLE:public.memory_vector_store}
       dimension: ${VECTOR_DB_DIMENSION:1024}
       drop-table-first: ${MEMORY_VECTOR_DB_DROP_TABLE_FIRST:false}
@@ -146,19 +174,27 @@ rag:
 
 dromara:
   x-file-storage: #文件存储配置
-    default-platform: amazon-s3-1 #默认使用的存储平台
+    default-platform: local-1 #默认使用本地存储
     thumbnail-suffix: ".min.jpg" #缩略图后缀，例如【.min.jpg】【.png】
     #对应平台的配置写在这里，注意缩进要对齐
+    local: # 本地存储配置
+      - platform: local-1 # 存储平台标识
+        enable-storage: true # 启用存储
+        domain: ${LOCAL_FILE_DOMAIN:http://localhost:8088/api/files/} # 访问域名，注意"/"结尾
+        base-path: ${LOCAL_FILE_PATH:./uploads/} # 基础路径
+        storage-path: ${LOCAL_FILE_PATH:./uploads/} # 存储路径
     amazon-s3: # 0.0.7 及以前的版本，配置名称是：aws-s3
       - platform: amazon-s3-1 # 存储平台标识
-        enable-storage: true # 启用存储
-        access-key: ${S3_SECRET_ID}
-        secret-key: ${S3_SECRET_KEY}
-        region: ${S3_REGION} # 与 end-point 参数至少填一个
-        end-point: ${S3_ENDPOINT} # 与 region 参数至少填一个
-        bucket-name: ${S3_BUCKET_NAME}
-        domain: ${S3_DOMAIN} # 访问域名，注意“/”结尾，例如：https://abc.hn-bkt.clouddn.com/
+        enable-storage: false # 禁用S3存储（本地开发环境）
+        access-key: ${S3_SECRET_ID:}
+        secret-key: ${S3_SECRET_KEY:}
+        region: ${S3_REGION:us-east-1} # 与 end-point 参数至少填一个
+        end-point: ${S3_ENDPOINT:} # 与 region 参数至少填一个
+        bucket-name: ${S3_BUCKET_NAME:}
+        domain: ${S3_DOMAIN:} # 访问域名，注意"/"结尾，例如：https://abc.hn-bkt.clouddn.com/
         base-path: s3/ # 基础路径
+        # 禁用EC2元数据服务访问
+        disable-ec2-metadata: true
 
 payment:
   alipay:
@@ -173,7 +209,7 @@ payment:
 # 容器管理配置
 agentx:
   container:
-    docker-host: ${AGENTX_CONTAINER_DOCKER_HOST:unix:///var/run/docker.sock}
+    docker-host: tcp://192.168.72.100:2375
     user-volume-base-path: ${AGENTX_CONTAINER_USER_VOLUME_PATH:/docker/users}
     default-mcp-gateway-image: ${AGENTX_CONTAINER_DEFAULT_MCP_IMAGE:ghcr.io/lucky-aeon/mcp-gateway:latest}
     monitor-interval: ${AGENTX_CONTAINER_MONITOR_INTERVAL:300000}

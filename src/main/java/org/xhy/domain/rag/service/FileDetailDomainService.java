@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.dromara.x.file.storage.core.FileInfo;
 import org.dromara.x.file.storage.core.FileStorageService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.xhy.domain.rag.constant.FileProcessingEventEnum;
 import org.xhy.domain.rag.constant.FileProcessingStatusEnum;
 import org.xhy.domain.rag.model.FileDetailEntity;
@@ -50,7 +51,6 @@ public class FileDetailDomainService {
         }
 
         final FileInfo upload = fileStorageService.of(fileDetailEntity.getMultipartFile())
-                .setMetadata(Map.of("dataset", fileDetailEntity.getDataSetId(), "userid", fileDetailEntity.getUserId()))
                 .upload();
 
         // 设置文件基本信息
@@ -70,8 +70,20 @@ public class FileDetailDomainService {
         // 初始化状态机
         stateMachineService.processFileState(fileDetailEntity);
 
-        // 保存文件记录
-        // fileDetailRepository.insert(fileDetailEntity);
+        // 保存或更新数据库记录
+        FileDetailEntity existingFile = fileDetailRepository.selectById(upload.getId());
+        if (existingFile == null) {
+            // 新增记录
+            fileDetailRepository.insert(fileDetailEntity);
+        } else {
+            // 更新记录，设置dataset和userId
+            FileDetailEntity updateEntity = new FileDetailEntity();
+            updateEntity.setId(upload.getId());
+            updateEntity.setDataSetId(fileDetailEntity.getDataSetId());
+            updateEntity.setUserId(fileDetailEntity.getUserId());
+            fileDetailRepository.updateById(updateEntity);
+        }
+
         return fileDetailEntity;
     }
 
