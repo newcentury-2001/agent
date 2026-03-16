@@ -12,6 +12,8 @@ import jakarta.annotation.Resource;
 import org.dromara.x.file.storage.core.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.xhy.domain.rag.message.RagDocMessage;
 import org.xhy.domain.rag.model.DocumentUnitEntity;
@@ -26,8 +28,13 @@ import org.xhy.infrastructure.rag.detector.TikaFileTypeDetector;
 import org.xhy.infrastructure.rag.utils.PdfToBase64Converter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,6 +51,12 @@ public class PDFRagDocDocumentProcessing extends AbstractDocumentProcessingStrat
 
     @Resource
     private FileStorageService fileStorageService;
+
+    @Resource(name = "ocrTaskExecutor")
+    private ThreadPoolTaskExecutor ocrTaskExecutor;
+
+    @Value("${rag.ocr.parallelism:4}")
+    private int ocrParallelism;
 
     // 用于存储当前处理的文件ID，以便更新进度
     private String currentProcessingFileId;
@@ -111,54 +124,56 @@ public class PDFRagDocDocumentProcessing extends AbstractDocumentProcessingStrat
     @Override
     public Map<Integer, String> processFile(byte[] fileBytes, int totalPages, RagDocMessage ragDocSyncOcrMessage) {
 
-        final HashMap<Integer, String> ocrData = new HashMap<>();
-        for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-            try {
-                // 单独处理每一页以减少内存使用
-                String base64 = PdfToBase64Converter.processPdfPageToBase64(fileBytes, pageIndex, "jpg");
+        final Map<Integer, String> ocrData = new ConcurrentHashMap<>();
+        final AtomicInteger completed = new AtomicInteger(0);
 
-                final UserMessage userMessage = UserMessage.userMessage(
-                        ImageContent.from(base64, TikaFileTypeDetector.detectFileType(Base64.decode(base64))),
-                        TextContent.from(OCR_PROMPT));
+        int parallelism = Math.max(1, Math.min(ocrParallelism, totalPages));
+        for (int start = 0; start < totalPages; start += parallelism) {
+            int end = Math.min(start + parallelism, totalPages);
+            List<CompletableFuture<Void>> batch = new ArrayList<>(end - start);
 
-                /** 创建OCR处理的模型配置 - 从消息中获取用户配置的OCR模型 */
-                ChatModel ocrModel = createOcrModelFromMessage(ragDocSyncOcrMessage);
-
-                final ChatResponse chat = ocrModel.chat(userMessage);
-
-                ocrData.put(pageIndex, processText(chat.aiMessage().text()));
-
-                // 实时更新处理进度
-                updateProcessProgress(pageIndex + 1, totalPages);
-
-                log.info("处理第{}/{}页，当前内存使用: {} MB", (pageIndex + 1), totalPages,
-                        (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024));
-
-                if ((pageIndex + 1) % 10 == 0) {
-                    System.gc();
-                }
-
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-
-                log.info("第{}页处理完成", (pageIndex + 1));
-            } catch (Exception e) {
-                log.error("处理PDF第{}页时出错: {}", (pageIndex + 1), e.getMessage());
-                // 继续处理下一页，不中断整个流程
+            for (int pageIndex = start; pageIndex < end; pageIndex++) {
+                final int page = pageIndex;
+                batch.add(CompletableFuture.runAsync(() -> {
+                    try {
+                        processPdfPage(fileBytes, page, ragDocSyncOcrMessage, ocrData);
+                    } catch (Exception e) {
+                        log.error("Failed to process PDF page {}: {}", (page + 1), e.getMessage());
+                    } finally {
+                        int current = completed.incrementAndGet();
+                        updateProcessProgress(current, totalPages);
+                        log.info("Page {} processed ({}/{})", (page + 1), current, totalPages);
+                    }
+                }, ocrTaskExecutor));
             }
+
+            CompletableFuture.allOf(batch.toArray(new CompletableFuture[0])).join();
         }
 
         return ocrData;
 
     }
 
-    /** 保存数据
-     *
-     * @param ragDocSyncOcrMessage 消息数据
-     * @param ocrData ocr数据 */
+    private void processPdfPage(byte[] fileBytes, int pageIndex, RagDocMessage ragDocSyncOcrMessage,
+            Map<Integer, String> ocrData) {
+        // Process one page to keep memory usage bounded
+        final String base64;
+        try {
+            base64 = PdfToBase64Converter.processPdfPageToBase64(fileBytes, pageIndex, "jpg");
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to render PDF page " + (pageIndex + 1), e);
+        }
+
+        final UserMessage userMessage = UserMessage.userMessage(
+                ImageContent.from(base64, TikaFileTypeDetector.detectFileType(Base64.decode(base64))),
+                TextContent.from(OCR_PROMPT));
+
+        // Create OCR model from message config
+        ChatModel ocrModel = createOcrModelFromMessage(ragDocSyncOcrMessage);
+        final ChatResponse chat = ocrModel.chat(userMessage);
+        ocrData.put(pageIndex, processText(chat.aiMessage().text()));
+    }
+
     @Override
     public void insertData(RagDocMessage ragDocSyncOcrMessage, Map<Integer, String> ocrData) {
 

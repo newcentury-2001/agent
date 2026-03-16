@@ -2,7 +2,10 @@ package org.xhy.infrastructure.rag.processor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import jakarta.annotation.Resource;
 import org.xhy.domain.rag.message.RagDocMessage;
 import org.xhy.domain.rag.message.RagDocSyncStorageMessage;
 import org.xhy.domain.rag.model.DocumentUnitEntity;
@@ -17,6 +20,9 @@ import org.xhy.infrastructure.mq.events.RagDocSyncStorageEvent;
 import org.xhy.infrastructure.rag.service.UserModelConfigResolver;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /** 向量段落处理器
  * 
@@ -32,6 +38,12 @@ public class DocumentVectorizationOrchestrator {
     private final MessagePublisher messagePublisher;
     private final FileDetailDomainService fileDetailDomainService;
     private final UserModelConfigResolver userModelConfigResolver;
+
+    @Resource(name = "vectorizationTaskExecutor")
+    private ThreadPoolTaskExecutor vectorizationTaskExecutor;
+
+    @Value("${rag.vectorization.parallelism:4}")
+    private int vectorizationParallelism;
 
     public DocumentVectorizationOrchestrator(MarkdownAstRewriter translator, MarkdownContentSplitter splitter,
             DocumentUnitRepository documentUnitRepository, MessagePublisher messagePublisher,
@@ -54,22 +66,34 @@ public class DocumentVectorizationOrchestrator {
             return;
         }
 
-        log.info("开始向量片段处理 {} 个文档单元", units.size());
+        log.info("Start vector segment processing for {} units", units.size());
 
-        int successCount = 0;
-        int errorCount = 0;
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger errorCount = new AtomicInteger(0);
 
-        for (DocumentUnitEntity unit : units) {
-            try {
-                processSingleUnit(unit, context);
-                successCount++;
-            } catch (Exception e) {
-                log.error("Failed to process document unit {}: {}", unit.getId(), e.getMessage(), e);
-                errorCount++;
+        int parallelism = Math.max(1, Math.min(vectorizationParallelism, units.size()));
+        for (int start = 0; start < units.size(); start += parallelism) {
+            int end = Math.min(start + parallelism, units.size());
+            List<CompletableFuture<Void>> batch = new ArrayList<>(end - start);
+
+            for (int i = start; i < end; i++) {
+                DocumentUnitEntity unit = units.get(i);
+                batch.add(CompletableFuture.runAsync(() -> {
+                    try {
+                        processSingleUnit(unit, context);
+                        successCount.incrementAndGet();
+                    } catch (Exception e) {
+                        log.error("Failed to process document unit {}: {}", unit.getId(), e.getMessage(), e);
+                        errorCount.incrementAndGet();
+                    }
+                }, vectorizationTaskExecutor));
             }
+
+            CompletableFuture.allOf(batch.toArray(new CompletableFuture[0])).join();
         }
 
-        log.info("Vector segment processing completed. Success: {}, Error: {}", successCount, errorCount);
+        log.info("Vector segment processing completed. Success: {}, Error: {}",
+                successCount.get(), errorCount.get());
     }
 
     /** 处理单个文档单元

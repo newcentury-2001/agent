@@ -38,6 +38,9 @@ public class RagDocSyncStorageMessage implements Serializable {
     /** 嵌入模型配置 */
     private ModelConfig embeddingModelConfig;
 
+    /** batch mode: one message per file */
+    private Boolean batch;
+
     public String getId() {
         return id;
     }
@@ -108,5 +111,13 @@ public class RagDocSyncStorageMessage implements Serializable {
 
     public void setEmbeddingModelConfig(ModelConfig embeddingModelConfig) {
         this.embeddingModelConfig = embeddingModelConfig;
+    }
+
+    public Boolean getBatch() {
+        return batch;
+    }
+
+    public void setBatch(Boolean batch) {
+        this.batch = batch;
     }
 }

@@ -495,23 +495,22 @@ public class RagQaDatasetAppService {
             if (documentUnits.isEmpty()) {
                 throw new IllegalStateException("文件没有找到可用于向量化的语料数据");
             }
+            // ????????????
+            RagDocSyncStorageMessage storageMessage = new RagDocSyncStorageMessage();
+            storageMessage.setFileId(request.getFileId());
+            storageMessage.setFileName(fileEntity.getOriginalFilename());
+            storageMessage.setVector(true);
+            storageMessage.setDatasetId(request.getDatasetId());
+            storageMessage.setUserId(userId);
+            storageMessage.setBatch(true);
+            storageMessage.setEmbeddingModelConfig(userModelConfigResolver.getUserEmbeddingModelConfig(userId));
 
-            // 为每个DocumentUnit发送单独的向量化MQ消息
-            for (DocumentUnitEntity documentUnit : documentUnits) {
-                RagDocSyncStorageMessage storageMessage = new RagDocSyncStorageMessage();
-                storageMessage.setId(documentUnit.getId());
-                storageMessage.setFileId(request.getFileId());
-                storageMessage.setFileName(fileEntity.getOriginalFilename());
-                storageMessage.setPage(documentUnit.getPage());
-                storageMessage.setContent(documentUnit.getContent());
-                storageMessage.setVector(true);
-                storageMessage.setDatasetId(request.getDatasetId()); // 设置数据集ID
+            MessageEnvelope<RagDocSyncStorageMessage> env = MessageEnvelope.builder(storageMessage)
+                    .addEventType(EventType.DOC_SYNC_RAG)
+                    .description("Batch vectorization for file")
+                    .build();
+            messagePublisher.publish(RagDocSyncStorageEvent.route(), env);
 
-                MessageEnvelope<RagDocSyncStorageMessage> env = MessageEnvelope.builder(storageMessage)
-                        .addEventType(EventType.DOC_SYNC_RAG).description("文件向量化处理任务 - 页面 " + documentUnit.getPage())
-                        .build();
-                messagePublisher.publish(RagDocSyncStorageEvent.route(), env);
-            }
 
         } else {
             throw new IllegalArgumentException("不支持的处理类型: " + request.getProcessType());
@@ -613,23 +612,22 @@ public class RagQaDatasetAppService {
                 documentUnit.setIsVector(false);
                 documentUnitDomainService.updateDocumentUnitById(documentUnit);
             }
+            // ????????????
+            RagDocSyncStorageMessage storageMessage = new RagDocSyncStorageMessage();
+            storageMessage.setFileId(request.getFileId());
+            storageMessage.setFileName(fileEntity.getOriginalFilename());
+            storageMessage.setVector(true);
+            storageMessage.setDatasetId(request.getDatasetId());
+            storageMessage.setUserId(userId);
+            storageMessage.setBatch(true);
+            storageMessage.setEmbeddingModelConfig(userModelConfigResolver.getUserEmbeddingModelConfig(userId));
 
-            // 为每个DocumentUnit发送向量化MQ消息
-            for (DocumentUnitEntity documentUnit : documentUnits) {
-                RagDocSyncStorageMessage storageMessage = new RagDocSyncStorageMessage();
-                storageMessage.setId(documentUnit.getId());
-                storageMessage.setFileId(request.getFileId());
-                storageMessage.setFileName(fileEntity.getOriginalFilename());
-                storageMessage.setPage(documentUnit.getPage());
-                storageMessage.setContent(documentUnit.getContent());
-                storageMessage.setVector(true);
-                storageMessage.setDatasetId(request.getDatasetId());
+            MessageEnvelope<RagDocSyncStorageMessage> env = MessageEnvelope.builder(storageMessage)
+                    .addEventType(EventType.DOC_SYNC_RAG)
+                    .description("Batch vectorization for file")
+                    .build();
+            messagePublisher.publish(RagDocSyncStorageEvent.route(), env);
 
-                MessageEnvelope<RagDocSyncStorageMessage> env = MessageEnvelope.builder(storageMessage)
-                        .addEventType(EventType.DOC_SYNC_RAG)
-                        .description("文件强制重新向量化处理任务 - 页面 " + documentUnit.getPage()).build();
-                messagePublisher.publish(RagDocSyncStorageEvent.route(), env);
-            }
 
         } else {
             throw new IllegalArgumentException("不支持的处理类型: " + request.getProcessType());

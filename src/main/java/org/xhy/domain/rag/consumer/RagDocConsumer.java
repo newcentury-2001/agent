@@ -181,26 +181,23 @@ public class RagDocConsumer {
                 return;
             }
 
-            // 为每个DocumentUnit发送向量化MQ消息
-            for (DocumentUnitEntity documentUnit : documentUnits) {
-                RagDocSyncStorageMessage storageMessage = new RagDocSyncStorageMessage();
-                storageMessage.setId(documentUnit.getId());
-                storageMessage.setFileId(fileId);
-                storageMessage.setFileName(fileEntity.getOriginalFilename());
-                storageMessage.setPage(documentUnit.getPage());
-                storageMessage.setContent(documentUnit.getContent());
-                storageMessage.setVector(true);
-                storageMessage.setDatasetId(fileEntity.getDataSetId());
-                storageMessage.setUserId(fileEntity.getUserId());
-                // 获取用户的嵌入模型配置
-                storageMessage.setEmbeddingModelConfig(
-                        userModelConfigResolver.getUserEmbeddingModelConfig(fileEntity.getUserId()));
+            // 发送单文件批处理的向量化消息
+            RagDocSyncStorageMessage storageMessage = new RagDocSyncStorageMessage();
+            storageMessage.setFileId(fileId);
+            storageMessage.setFileName(fileEntity.getOriginalFilename());
+            storageMessage.setVector(true);
+            storageMessage.setDatasetId(fileEntity.getDataSetId());
+            storageMessage.setUserId(fileEntity.getUserId());
+            storageMessage.setBatch(true);
+            // 获取用户的嵌入模型配置
+            storageMessage.setEmbeddingModelConfig(
+                    userModelConfigResolver.getUserEmbeddingModelConfig(fileEntity.getUserId()));
 
-                MessageEnvelope<RagDocSyncStorageMessage> env = MessageEnvelope.builder(storageMessage)
-                        .addEventType(EventType.DOC_SYNC_RAG).description("文件自动向量化处理任务 - 页面 " + documentUnit.getPage())
-                        .build();
-                messagePublisher.publish(RagDocSyncStorageEvent.route(), env);
-            }
+            MessageEnvelope<RagDocSyncStorageMessage> env = MessageEnvelope.builder(storageMessage)
+                    .addEventType(EventType.DOC_SYNC_RAG)
+                    .description("Batch vectorization for file")
+                    .build();
+            messagePublisher.publish(RagDocSyncStorageEvent.route(), env);
 
             log.info("自动向量化启动完成，文件ID: {}，{}个文档单元", fileId, documentUnits.size());
 

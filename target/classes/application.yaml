@@ -159,6 +159,20 @@ rerank:
   timeout: ${SILICONFLOW_TIMEOUT:30000}
 
 rag:
+  ocr:
+    parallelism: ${RAG_OCR_PARALLELISM:4}
+    thread-pool:
+      core: ${RAG_OCR_POOL_CORE:4}
+      max: ${RAG_OCR_POOL_MAX:8}
+      queue: ${RAG_OCR_POOL_QUEUE:200}
+  embedding:
+    listener:
+      concurrency: ${RAG_EMBEDDING_CONCURRENCY:10-20}
+    parallelism: ${RAG_EMBEDDING_PARALLELISM:4}
+    thread-pool:
+      core: ${RAG_EMBEDDING_POOL_CORE:4}
+      max: ${RAG_EMBEDDING_POOL_MAX:8}
+      queue: ${RAG_EMBEDDING_POOL_QUEUE:200}
   markdown:
     segment-split:
       enabled: ${RAG_MARKDOWN_SPLIT_ENABLED:true}
@@ -171,6 +185,12 @@ rag:
     max-length: ${RAG_VECTOR_MAX_LENGTH:1800}
     min-length: ${RAG_VECTOR_MIN_LENGTH:200}
     overlap-size: ${RAG_VECTOR_OVERLAP_SIZE:100}
+  vectorization:
+    parallelism: ${RAG_VECTORIZATION_PARALLELISM:4}
+    thread-pool:
+      core: ${RAG_VECTORIZATION_POOL_CORE:4}
+      max: ${RAG_VECTORIZATION_POOL_MAX:8}
+      queue: ${RAG_VECTORIZATION_POOL_QUEUE:200}
 
 dromara:
   x-file-storage: #文件存储配置
