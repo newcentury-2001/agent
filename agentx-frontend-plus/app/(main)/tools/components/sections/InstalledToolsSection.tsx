@@ -10,13 +10,15 @@ interface InstalledToolsSectionProps {
   loading: boolean;
   onToolClick: (tool: UserTool) => void;
   onDeleteClick: (tool: UserTool, e: React.MouseEvent) => void;
+  onRefreshStatus?: () => void;
 }
 
 export function InstalledToolsSection({
   installedTools,
   loading,
   onToolClick,
-  onDeleteClick
+  onDeleteClick,
+  onRefreshStatus
 }: InstalledToolsSectionProps) {
   // 检查是否有被删除的工具
   const hasDeletedTools = installedTools.some(tool => tool.deleted);
@@ -64,6 +66,7 @@ export function InstalledToolsSection({
               tool={tool}
               onCardClick={onToolClick}
               onDeleteClick={onDeleteClick}
+              onRefreshStatus={onRefreshStatus}
             />
           ))}
         </div>

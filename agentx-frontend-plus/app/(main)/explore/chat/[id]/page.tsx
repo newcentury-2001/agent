@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { AgentSidebar } from "@/components/agent-sidebar"
 import { ChatPanel } from "@/components/chat-panel"
+import { PlanSidebar } from "@/components/plan-sidebar"
 import { getAgentSessionsWithToast, type SessionDTO } from "@/lib/agent-session-service"
 import { getAgentBySessionId } from "@/lib/agent-service"
 import type { Agent } from "@/types/agent"
@@ -50,12 +51,17 @@ export default function ChatPage({ params }: { params: { id: string } }) {
       <AgentSidebar />
 
       {/* 右侧聊天面板 */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col">
         <ChatPanel 
           conversationId={params.id} 
           agentName={currentAgent?.name || "AI助手"}
           multiModal={multiModal}
         />
+        </div>
+        <div className="hidden xl:flex">
+          <PlanSidebar conversationId={params.id} />
+        </div>
       </div>
     </div>
   )

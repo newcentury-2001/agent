@@ -5,6 +5,7 @@ import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.exception.DockerException;
+import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
@@ -142,8 +143,19 @@ public class DockerService {
                 logger.info("容器使用host网络模式，直接使用宿主机网络");
             }
 
-            // 创建容器
-            CreateContainerResponse container = createCmd.withHostConfig(hostConfig).exec();
+            // 创建容器（如果镜像未找到，尝试拉取后重试一次）
+            CreateContainerResponse container;
+            try {
+                container = createCmd.withHostConfig(hostConfig).exec();
+            } catch (NotFoundException e) {
+                if (e.getMessage() != null && e.getMessage().contains("No such image")) {
+                    logger.warn("镜像不存在，尝试重新拉取后创建: {}", template.getImage());
+                    pullImageIfNotExists(template.getImage());
+                    container = createCmd.withHostConfig(hostConfig).exec();
+                } else {
+                    throw e;
+                }
+            }
 
             String containerId = container.getId();
             logger.info("成功创建容器: {} -> {}", containerName, containerId);

@@ -27,6 +27,11 @@ import org.xhy.domain.conversation.service.MessageDomainService;
 import org.xhy.domain.conversation.service.SessionDomainService;
 import org.xhy.domain.llm.service.HighAvailabilityDomainService;
 import org.xhy.domain.llm.service.LLMDomainService;
+import org.xhy.domain.plan.model.PlanEntity;
+import org.xhy.domain.plan.model.PlanStatus;
+import org.xhy.domain.plan.model.PlanStepEntity;
+import org.xhy.domain.plan.model.PlanStepStatus;
+import org.xhy.domain.plan.service.PlanDomainService;
 import org.xhy.domain.user.service.AccountDomainService;
 import org.xhy.domain.user.service.UserSettingsDomainService;
 import org.xhy.infrastructure.llm.LLMServiceFactory;
@@ -58,18 +63,20 @@ public class RagMessageHandler extends AbstractMessageHandler {
 
     private final RAGSearchAppService ragSearchAppService;
     private final ObjectMapper objectMapper;
+    private final PlanDomainService planDomainService;
 
     public RagMessageHandler(LLMServiceFactory llmServiceFactory, MessageDomainService messageDomainService,
             HighAvailabilityDomainService highAvailabilityDomainService, SessionDomainService sessionDomainService,
             UserSettingsDomainService userSettingsDomainService, LLMDomainService llmDomainService,
             BuiltInToolRegistry builtInToolRegistry, BillingService billingService,
             AccountDomainService accountDomainService, ChatSessionManager chatSessionManager,
-            RAGSearchAppService ragSearchAppService, ObjectMapper objectMapper) {
+            RAGSearchAppService ragSearchAppService, ObjectMapper objectMapper, PlanDomainService planDomainService) {
         super(llmServiceFactory, messageDomainService, highAvailabilityDomainService, sessionDomainService,
                 userSettingsDomainService, llmDomainService, builtInToolRegistry, billingService, accountDomainService,
                 chatSessionManager);
         this.ragSearchAppService = ragSearchAppService;
         this.objectMapper = objectMapper;
+        this.planDomainService = planDomainService;
     }
 
     /** 重写流式聊天处理，添加RAG检索逻辑 */
@@ -84,10 +91,11 @@ public class RagMessageHandler extends AbstractMessageHandler {
         }
 
         RagChatContext ragContext = (RagChatContext) chatContext;
+        PlanData planData = getOrCreatePlan(ragContext);
 
         try {
             // 第一阶段：RAG检索
-            RagRetrievalResult retrievalResult = performRagRetrieval(ragContext, transport, connection);
+            RagRetrievalResult retrievalResult = performRagRetrieval(ragContext, transport, connection, planData);
 
             if (!retrievalResult.hasDocuments()) {
                 transport.sendEndMessage(connection, AgentChatResponse.build("没有搜索到相关文档，可以换一个方式提问", MessageType.TEXT));
@@ -95,10 +103,11 @@ public class RagMessageHandler extends AbstractMessageHandler {
 
             // 第二阶段：基于检索结果生成回答
             generateRagAnswer(ragContext, retrievalResult, connection, transport, userEntity, llmEntity, memory,
-                    toolProvider);
+                    toolProvider, planData);
 
         } catch (Exception e) {
             logger.error("RAG流式处理失败", e);
+            markPlanFailed(planData, "RAG processing failed: " + e.getMessage());
             AgentChatResponse errorResponse = AgentChatResponse.buildEndMessage("处理过程中发生错误: " + e.getMessage(),
                     MessageType.TEXT);
             transport.sendMessage(connection, errorResponse);
@@ -111,10 +120,13 @@ public class RagMessageHandler extends AbstractMessageHandler {
      * @param connection 连接
      * @return 检索结果 */
     private <T> RagRetrievalResult performRagRetrieval(RagChatContext ragContext, MessageTransport<T> transport,
-            T connection) {
+            T connection, PlanData planData) {
         try {
             // 发送检索开始信号
-            transport.sendMessage(connection, AgentChatResponse.build("开始检索相关文档...", MessageType.RAG_RETRIEVAL_START));
+            markPlanStepDoing(planData, 1);
+            AgentChatResponse retrievalStart = AgentChatResponse.build("开始检索相关文档...", MessageType.RAG_RETRIEVAL_START);
+            retrievalStart.setPayload("{\"sessionId\":\"" + ragContext.getSessionId() + "\"}");
+            transport.sendMessage(connection, retrievalStart);
             Thread.sleep(500);
 
             // 执行RAG检索 - 获取完整数据用于答案生成
@@ -137,21 +149,31 @@ public class RagMessageHandler extends AbstractMessageHandler {
             AgentChatResponse retrievalEndResponse = AgentChatResponse.build(retrievalMessage,
                     MessageType.RAG_RETRIEVAL_END);
 
-            // 设置轻量级文档作为payload（优化传输）
+            // 设置轻量级文档作为payload（优化传输），并携带sessionId用于前端侧边栏
             try {
-                retrievalEndResponse.setPayload(objectMapper.writeValueAsString(lightweightDocuments));
+                java.util.Map<String, Object> payload = new java.util.HashMap<>();
+                payload.put("sessionId", ragContext.getSessionId());
+                payload.put("documents", lightweightDocuments);
+                retrievalEndResponse.setPayload(objectMapper.writeValueAsString(payload));
             } catch (Exception e) {
                 logger.error("序列化检索文档失败", e);
+                try {
+                    retrievalEndResponse.setPayload(objectMapper.writeValueAsString(lightweightDocuments));
+                } catch (Exception ignored) {
+ 
+                }
             }
 
             transport.sendMessage(connection, retrievalEndResponse);
             Thread.sleep(500);
 
+            markPlanStepDone(planData, 1, retrievalMessage);
             // 返回包含完整数据的结果用于答案生成
             return new RagRetrievalResult(fullRetrievedDocuments, retrievalMessage);
 
         } catch (Exception e) {
             logger.error("RAG检索失败", e);
+            markPlanStepFailed(planData, 1, "RAG retrieval failed: " + e.getMessage());
             transport.sendMessage(connection, AgentChatResponse.build("文档检索失败: " + e.getMessage(), MessageType.TEXT));
             return new RagRetrievalResult(Collections.emptyList(), "检索失败");
         }
@@ -168,9 +190,10 @@ public class RagMessageHandler extends AbstractMessageHandler {
      * @param toolProvider 工具提供者 */
     private <T> void generateRagAnswer(RagChatContext ragContext, RagRetrievalResult retrievalResult, T connection,
             MessageTransport<T> transport, MessageEntity userEntity, MessageEntity llmEntity,
-            MessageWindowChatMemory memory, ToolProvider toolProvider) {
+            MessageWindowChatMemory memory, ToolProvider toolProvider, PlanData planData) {
 
         // 发送回答生成开始信号
+        markPlanStepDoing(planData, 2);
         transport.sendMessage(connection, AgentChatResponse.build("开始生成回答...", MessageType.RAG_ANSWER_START));
 
         // 保存用户消息
@@ -186,12 +209,13 @@ public class RagMessageHandler extends AbstractMessageHandler {
                 retrievalResult.getRetrievedDocuments());
 
         // 启动流式处理
-        processRagChat(agent, connection, transport, ragContext, userEntity, llmEntity, ragContext.getUserMessage());
+        processRagChat(agent, connection, transport, ragContext, userEntity, llmEntity, ragContext.getUserMessage(),
+                planData);
     }
 
     /** RAG专用的聊天处理逻辑 */
     private <T> void processRagChat(Agent agent, T connection, MessageTransport<T> transport, RagChatContext ragContext,
-            MessageEntity userEntity, MessageEntity llmEntity, String ragPrompt) {
+            MessageEntity userEntity, MessageEntity llmEntity, String ragPrompt, PlanData planData) {
 
         AtomicReference<StringBuilder> messageBuilder = new AtomicReference<>(new StringBuilder());
         TokenStream tokenStream = agent.chat(ragPrompt);
@@ -208,6 +232,7 @@ public class RagMessageHandler extends AbstractMessageHandler {
         tokenStream.onError(throwable -> {
             transport.sendMessage(connection,
                     AgentChatResponse.buildEndMessage(throwable.getMessage(), MessageType.TEXT));
+            markPlanFailed(planData, "RAG answer failed: " + throwable.getMessage());
 
             // 上报调用失败结果
             long latency = System.currentTimeMillis() - startTime;
@@ -256,6 +281,9 @@ public class RagMessageHandler extends AbstractMessageHandler {
             // 发送RAG回答结束信号
             transport.sendMessage(connection, AgentChatResponse.buildEndMessage("回答生成完成", MessageType.RAG_ANSWER_END));
 
+            markPlanStepDone(planData, 2, llmEntity.getContent());
+            markPlanDone(planData, llmEntity.getContent());
+
             // 上报调用成功结果
             long latency = System.currentTimeMillis() - startTime;
             highAvailabilityDomainService.reportCallResult(ragContext.getInstanceId(), ragContext.getModel().getId(),
@@ -270,6 +298,115 @@ public class RagMessageHandler extends AbstractMessageHandler {
 
         // 启动流处理
         tokenStream.start();
+    }
+
+    private PlanData getOrCreatePlan(RagChatContext ragContext) {
+        if (ragContext == null) {
+            return null;
+        }
+        String sessionId = ragContext.getSessionId();
+        String userId = ragContext.getUserId();
+        PlanEntity activePlan = planDomainService.getActivePlan(sessionId, userId);
+        if (activePlan != null) {
+            List<PlanStepEntity> steps = planDomainService.getPlanSteps(activePlan.getId());
+            if (!steps.isEmpty()) {
+                return new PlanData(activePlan, steps);
+            }
+        }
+
+        List<PlanStepEntity> steps = new ArrayList<>();
+        PlanStepEntity retrievalStep = new PlanStepEntity();
+        retrievalStep.setStepNo(1);
+        retrievalStep.setTitle("文档检索");
+        retrievalStep.setDetail("根据问题检索相关文档内容");
+        retrievalStep.setStatus(PlanStepStatus.TODO.name());
+        steps.add(retrievalStep);
+
+        PlanStepEntity answerStep = new PlanStepEntity();
+        answerStep.setStepNo(2);
+        answerStep.setTitle("生成回答");
+        answerStep.setDetail("基于检索结果生成回答");
+        answerStep.setStatus(PlanStepStatus.TODO.name());
+        steps.add(answerStep);
+
+        String title = ragContext.getUserMessage();
+        if (title == null || title.isBlank()) {
+            title = "RAG 问答";
+        }
+        PlanEntity plan = planDomainService.createPlan(userId, sessionId, title, "", steps);
+        return new PlanData(plan, steps);
+    }
+
+    private void markPlanStepDoing(PlanData planData, int stepNo) {
+        if (planData == null) {
+            return;
+        }
+        PlanStepEntity step = getStepByIndex(planData.steps, stepNo);
+        if (step != null) {
+            planDomainService.updateStepStatus(step, PlanStepStatus.DOING, null);
+            planDomainService.updateCurrentStep(planData.plan, stepNo);
+            planDomainService.updatePlanStatus(planData.plan, PlanStatus.ACTIVE);
+        }
+    }
+
+    private void markPlanStepDone(PlanData planData, int stepNo, String result) {
+        if (planData == null) {
+            return;
+        }
+        PlanStepEntity step = getStepByIndex(planData.steps, stepNo);
+        if (step != null) {
+            planDomainService.updateStepStatus(step, PlanStepStatus.DONE, result);
+            planDomainService.updateCurrentStep(planData.plan, stepNo);
+        }
+    }
+
+    private void markPlanStepFailed(PlanData planData, int stepNo, String result) {
+        if (planData == null) {
+            return;
+        }
+        PlanStepEntity step = getStepByIndex(planData.steps, stepNo);
+        if (step != null) {
+            planDomainService.updateStepStatus(step, PlanStepStatus.FAILED, result);
+        }
+        planDomainService.updatePlanStatus(planData.plan, PlanStatus.FAILED);
+    }
+
+    private void markPlanDone(PlanData planData, String summary) {
+        if (planData == null) {
+            return;
+        }
+        planDomainService.updatePlanSummary(planData.plan, summary);
+        planDomainService.updatePlanStatus(planData.plan, PlanStatus.DONE);
+    }
+
+    private void markPlanFailed(PlanData planData, String reason) {
+        if (planData == null) {
+            return;
+        }
+        planDomainService.updatePlanSummary(planData.plan, reason);
+        planDomainService.updatePlanStatus(planData.plan, PlanStatus.FAILED);
+    }
+
+    private PlanStepEntity getStepByIndex(List<PlanStepEntity> steps, int stepNo) {
+        if (steps == null || steps.isEmpty()) {
+            return null;
+        }
+        for (PlanStepEntity step : steps) {
+            if (step.getStepNo() != null && step.getStepNo() == stepNo) {
+                return step;
+            }
+        }
+        return null;
+    }
+
+    private static class PlanData {
+        private final PlanEntity plan;
+        private final List<PlanStepEntity> steps;
+
+        private PlanData(PlanEntity plan, List<PlanStepEntity> steps) {
+            this.plan = plan;
+            this.steps = steps;
+        }
     }
 
     /** 将DocumentUnitDTO转换为轻量级展示DTO */

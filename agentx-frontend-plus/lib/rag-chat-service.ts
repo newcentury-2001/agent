@@ -10,7 +10,21 @@ export interface RagChatOptions {
   onContent?: (content: string, timestamp?: number) => void;
   onError?: (error: string) => void;
   onDone?: () => void;
+  onSession?: (sessionId: string) => void;
   signal?: AbortSignal;
+}
+
+function extractSessionId(payload?: string): string | null {
+  if (!payload) return null;
+  try {
+    const parsed = JSON.parse(payload);
+    if (parsed && typeof parsed === 'object' && typeof parsed.sessionId === 'string') {
+      return parsed.sessionId;
+    }
+  } catch (error) {
+    return null;
+  }
+  return null;
 }
 
 // 内部状态管理，防止重复调用
@@ -24,7 +38,7 @@ export async function ragStreamChatByUserRag(
   request: RagStreamChatRequest,
   options: RagChatOptions = {}
 ): Promise<void> {
-  const { onThinking, onThinkingContent, onThinkingEnd, onContent, onError, onDone, signal } = options;
+  const { onThinking, onThinkingContent, onThinkingEnd, onContent, onError, onDone, onSession, signal } = options;
   
   // 会话状态管理
   const sessionState: SessionState = { isDone: false };
@@ -126,6 +140,18 @@ export async function ragStreamChatByUserRag(
             
             switch (messageType) {
               case 'RAG_RETRIEVAL_START':
+                {
+                  const sessionId = extractSessionId(message.payload);
+                  if (sessionId) {
+                    onSession?.(sessionId);
+                  }
+                }
+                {
+                  const sessionId = extractSessionId(message.payload);
+                  if (sessionId) {
+                    onSession?.(sessionId);
+                  }
+                }
  
                 onThinking?.({
                   type: 'retrieval',
@@ -136,19 +162,24 @@ export async function ragStreamChatByUserRag(
               case 'RAG_RETRIEVAL_END':
               case 'RAG_RETRIEVAL_COMPLETE':
  
-                const retrievalData = {
-                  type: 'retrieval',
-                  status: 'end',
-                  message: message.content || '检索完成',
-                  documents: message.payload ? JSON.parse(message.payload) : [],
-                  retrievedCount: 0
-                };
-                // 计算检索到的文档数量
-                if (retrievalData.documents && Array.isArray(retrievalData.documents)) {
-                  retrievalData.retrievedCount = retrievalData.documents.length;
+                {
+                  const parsedPayload = message.payload ? JSON.parse(message.payload) : [];
+                  const documents = Array.isArray(parsedPayload) ? parsedPayload : (parsedPayload?.documents || []);
+                  const sessionId = !Array.isArray(parsedPayload) && typeof parsedPayload?.sessionId === 'string'
+                    ? parsedPayload.sessionId
+                    : null;
+                  if (sessionId) {
+                    onSession?.(sessionId);
+                  }
+                  const retrievalData = {
+                    type: 'retrieval',
+                    status: 'end',
+                    message: message.content || '检索完成',
+                    documents,
+                    retrievedCount: Array.isArray(documents) ? documents.length : 0
+                  };
+                  onThinking?.(retrievalData);
                 }
- 
-                onThinking?.(retrievalData);
                 break;
               case 'RAG_THINKING_START':
  
@@ -216,7 +247,7 @@ export async function ragStreamChat(
   request: RagStreamChatRequest,
   options: RagChatOptions = {}
 ): Promise<void> {
-  const { onThinking, onThinkingContent, onThinkingEnd, onContent, onError, onDone, signal } = options;
+  const { onThinking, onThinkingContent, onThinkingEnd, onContent, onError, onDone, onSession, signal } = options;
   
   // 会话状态管理
   const sessionState: SessionState = { isDone: false };
@@ -296,14 +327,23 @@ export async function ragStreamChat(
                 onThinking?.({ type: 'retrieval', status: 'progress', message: message.content });
                 break;
               case 'RAG_RETRIEVAL_END':
-                const retrievedDocs = message.payload ? JSON.parse(message.payload) : [];
-                onThinking?.({ 
-                  type: 'retrieval', 
-                  status: 'end', 
-                  message: message.content,
-                  retrievedCount: retrievedDocs.length,
-                  documents: retrievedDocs
-                });
+                {
+                  const parsedPayload = message.payload ? JSON.parse(message.payload) : [];
+                  const retrievedDocs = Array.isArray(parsedPayload) ? parsedPayload : (parsedPayload?.documents || []);
+                  const sessionId = !Array.isArray(parsedPayload) && typeof parsedPayload?.sessionId === 'string'
+                    ? parsedPayload.sessionId
+                    : null;
+                  if (sessionId) {
+                    onSession?.(sessionId);
+                  }
+                  onThinking?.({ 
+                    type: 'retrieval', 
+                    status: 'end', 
+                    message: message.content,
+                    retrievedCount: Array.isArray(retrievedDocs) ? retrievedDocs.length : 0,
+                    documents: retrievedDocs
+                  });
+                }
                 break;
               case 'RAG_ANSWER_START':
                 onThinking?.({ type: 'answer', status: 'start', message: message.content });

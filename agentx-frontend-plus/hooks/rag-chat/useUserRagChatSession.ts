@@ -26,6 +26,7 @@ export function useUserRagChatSession(options: UseUserRagChatSessionOptions = {}
   const [isLoading, setIsLoading] = useState(false);
   const [currentThinking, setCurrentThinking] = useState<RagThinkingData | null>(null);
   const [currentThinkingContent, setCurrentThinkingContent] = useState<string>('');
+  const [sessionId, setSessionId] = useState<string | null>(null);
   
   const chatSessionRef = useRef<UserRagChatSession | null>(null);
   const thinkingContentRef = useRef<string>('');
@@ -40,6 +41,7 @@ export function useUserRagChatSession(options: UseUserRagChatSessionOptions = {}
     setCurrentThinkingContent('');
     thinkingContentRef.current = '';
     setIsLoading(false);
+    setSessionId(null);
   }, []);
 
   // 停止生成
@@ -91,6 +93,7 @@ export function useUserRagChatSession(options: UseUserRagChatSessionOptions = {}
     setCurrentThinkingContent('');
     thinkingContentRef.current = '';
     processedTimestamps.current.clear();
+    setSessionId(null);
 
     // 确保聊天会话已初始化
     if (!chatSessionRef.current) {
@@ -137,6 +140,9 @@ export function useUserRagChatSession(options: UseUserRagChatSessionOptions = {}
               }
               return prev;
             });
+          },
+          onSession: (newSessionId) => {
+            setSessionId(newSessionId);
           },
           onThinkingContent: (content, timestamp) => {
             thinkingContentRef.current += content;
@@ -276,6 +282,7 @@ export function useUserRagChatSession(options: UseUserRagChatSessionOptions = {}
     isLoading,
     currentThinking,
     currentThinkingContent,
+    sessionId,
     sendMessage,
     clearMessages,
     stopGeneration

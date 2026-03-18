@@ -4,6 +4,7 @@ import { MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ResponsiveDialog } from "@/components/layout/ResponsiveDialog";
 import { SplitLayout } from "@/components/layout/SplitLayout";
+import { PlanSidebar } from "@/components/plan-sidebar";
 import { ChatMessageList } from "./ChatMessageList";
 import { ChatInputArea } from "./ChatInputArea";
 import { FileDetailPanel } from "./FileDetailPanel";
@@ -11,6 +12,7 @@ import { useRagChatSession } from "@/hooks/rag-chat/useRagChatSession";
 import { useChatLayout } from "@/hooks/rag-chat/useChatLayout";
 import { toast } from "@/hooks/use-toast";
 import type { RagDataset, RetrievedFileInfo, DocumentSegment } from "@/types/rag-dataset";
+import type { PlanStep } from "@/types/plan";
 
 interface RagChatDialogProps {
   open: boolean;
@@ -19,6 +21,10 @@ interface RagChatDialogProps {
 }
 
 export function RagChatDialog({ open, onOpenChange, dataset }: RagChatDialogProps) {
+  const placeholderSteps: PlanStep[] = [
+    { stepNo: 1, title: "文档检索", status: "TODO" },
+    { stepNo: 2, title: "生成回答", status: "TODO" }
+  ];
   const {
     uiState,
     selectFile,
@@ -33,7 +39,8 @@ export function RagChatDialog({ open, onOpenChange, dataset }: RagChatDialogProp
     isLoading,
     sendMessage,
     clearMessages,
-    stopGeneration
+    stopGeneration,
+    sessionId
   } = useRagChatSession({
     onError: (error) => {
       toast({
@@ -93,23 +100,28 @@ export function RagChatDialog({ open, onOpenChange, dataset }: RagChatDialogProp
     >
       <SplitLayout
         leftPanel={
-          <div className="flex flex-col h-full">
-            <ChatMessageList
-              messages={messages}
-              onFileClick={handleFileClick}
-              onSegmentClick={handleSegmentClick}
-              selectedFileId={uiState.selectedFile?.fileId}
-              selectedSegmentId={uiState.selectedSegment?.documentId}
-              className="flex-1"
-            />
-            
-            <ChatInputArea
-              onSend={handleSendMessage}
-              onStop={stopGeneration}
-              onClear={handleClearMessages}
-              isLoading={isLoading}
-              hasMessages={messages.length > 0}
-            />
+          <div className="flex h-full relative">
+            <div className="flex-1 flex flex-col">
+              <ChatMessageList
+                messages={messages}
+                onFileClick={handleFileClick}
+                onSegmentClick={handleSegmentClick}
+                selectedFileId={uiState.selectedFile?.fileId}
+                selectedSegmentId={uiState.selectedSegment?.documentId}
+                className="flex-1"
+              />
+              
+              <ChatInputArea
+                onSend={handleSendMessage}
+                onStop={stopGeneration}
+                onClear={handleClearMessages}
+                isLoading={isLoading}
+                hasMessages={messages.length > 0}
+              />
+            </div>
+            <div className="hidden xl:flex">
+              <PlanSidebar conversationId={sessionId || undefined} placeholderSteps={placeholderSteps} position="absolute" />
+            </div>
           </div>
         }
         rightPanel={

@@ -4,12 +4,14 @@ import { MessageSquare } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { ResponsiveDialog } from "@/components/layout/ResponsiveDialog"
 import { SplitLayout } from "@/components/layout/SplitLayout"
+import { PlanSidebar } from "@/components/plan-sidebar"
 import { ChatMessageList } from "@/components/rag-chat/ChatMessageList"
 import { ChatInputArea } from "@/components/rag-chat/ChatInputArea"
 import { FileDetailPanel } from "@/components/rag-chat/FileDetailPanel"
 import { useUserRagChatSession } from "@/hooks/rag-chat/useUserRagChatSession"
 import { useChatLayout } from "@/hooks/rag-chat/useChatLayout"
 import type { UserRagDTO, RetrievedFileInfo } from "@/types/rag-dataset"
+import type { PlanStep } from "@/types/plan"
 
 interface InstalledRagChatDialogProps {
   open: boolean
@@ -22,6 +24,10 @@ export function InstalledRagChatDialog({
   onOpenChange, 
   userRag 
 }: InstalledRagChatDialogProps) {
+  const placeholderSteps: PlanStep[] = [
+    { stepNo: 1, title: "文档检索", status: "TODO" },
+    { stepNo: 2, title: "生成回答", status: "TODO" }
+  ]
   const {
     uiState,
     selectFile,
@@ -35,7 +41,8 @@ export function InstalledRagChatDialog({
     isLoading,
     sendMessage,
     clearMessages,
-    stopGeneration
+    stopGeneration,
+    sessionId
   } = useUserRagChatSession({})
 
   // 处理文件点击
@@ -102,21 +109,26 @@ export function InstalledRagChatDialog({
     >
       <SplitLayout
         leftPanel={
-          <div className="flex flex-col h-full">
-            <ChatMessageList
-              messages={messages}
-              onFileClick={handleFileClick}
-              selectedFileId={uiState.selectedFile?.fileId}
-              className="flex-1"
-            />
-            
-            <ChatInputArea
-              onSend={handleSendMessage}
-              onStop={stopGeneration}
-              onClear={handleClearMessages}
-              isLoading={isLoading}
-              hasMessages={messages.length > 0}
-            />
+          <div className="flex h-full relative">
+            <div className="flex-1 flex flex-col">
+              <ChatMessageList
+                messages={messages}
+                onFileClick={handleFileClick}
+                selectedFileId={uiState.selectedFile?.fileId}
+                className="flex-1"
+              />
+              
+              <ChatInputArea
+                onSend={handleSendMessage}
+                onStop={stopGeneration}
+                onClear={handleClearMessages}
+                isLoading={isLoading}
+                hasMessages={messages.length > 0}
+              />
+            </div>
+            <div className="hidden xl:flex">
+              <PlanSidebar conversationId={sessionId || undefined} placeholderSteps={placeholderSteps} position="absolute" />
+            </div>
           </div>
         }
         rightPanel={

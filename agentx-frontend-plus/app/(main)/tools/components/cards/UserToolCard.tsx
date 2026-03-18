@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ReviewStatusDialog } from "../dialogs/ReviewStatusDialog";
 
 interface UserToolCardProps {
@@ -19,6 +19,7 @@ interface UserToolCardProps {
   onEditClick?: (tool: UserTool, e: React.MouseEvent) => void;
   onDeleteClick: (tool: UserTool, e: React.MouseEvent) => void;
   onPublishClick?: (tool: UserTool, e: React.MouseEvent) => void;
+  onRefreshStatus?: () => void;
 }
 
 export function UserToolCard({ 
@@ -26,9 +27,20 @@ export function UserToolCard({
   onCardClick, 
   onEditClick,
   onDeleteClick,
-  onPublishClick
+  onPublishClick,
+  onRefreshStatus
 }: UserToolCardProps) {
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+  const isTerminalStatus = tool.status === ToolStatus.APPROVED || tool.status === ToolStatus.FAILED;
+
+  useEffect(() => {
+    if (!isReviewDialogOpen || !onRefreshStatus || isTerminalStatus) return;
+    onRefreshStatus();
+    const timer = setInterval(() => {
+      onRefreshStatus();
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [isReviewDialogOpen, onRefreshStatus, isTerminalStatus]);
   
   // 获取作者信息，优先使用userName，其次使用author
   const authorName = useMemo(() => {

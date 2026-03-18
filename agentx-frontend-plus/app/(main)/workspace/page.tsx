@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 import { ChatPanel } from "@/components/chat-panel"
+import { PlanSidebar } from "@/components/plan-sidebar"
 import { EmptyState } from "@/components/empty-state"
 import { ConversationList } from "@/components/conversation-list"
 import { useWorkspace } from "@/contexts/workspace-context"
@@ -302,6 +303,9 @@ export default function WorkspacePage() {
                 onToggleScheduledTaskPanel={() => setShowScheduledTaskPanel(!showScheduledTaskPanel)}
                 multiModal={multiModal}
               />
+            </div>
+            <div className="hidden xl:flex">
+              <PlanSidebar conversationId={selectedConversationId} />
             </div>
             {showScheduledTaskPanel && isFunctionalAgent && (
               <ScheduledTaskPanel 

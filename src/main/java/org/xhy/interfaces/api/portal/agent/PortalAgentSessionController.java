@@ -12,6 +12,8 @@ import org.xhy.application.conversation.dto.MessageDTO;
 import org.xhy.application.conversation.dto.SessionDTO;
 import org.xhy.application.conversation.service.ChatSessionManager;
 import org.xhy.application.conversation.service.ConversationAppService;
+import org.xhy.application.plan.dto.PlanViewDTO;
+import org.xhy.application.plan.service.PlanAppService;
 import org.xhy.infrastructure.auth.UserContext;
 import org.xhy.interfaces.api.common.Result;
 
@@ -29,12 +31,15 @@ public class PortalAgentSessionController {
     private final AgentSessionAppService agentSessionAppService;
     private final ConversationAppService conversationAppService;
     private final ChatSessionManager chatSessionManager;
+    private final PlanAppService planAppService;
 
     public PortalAgentSessionController(AgentSessionAppService agentSessionAppService,
-            ConversationAppService conversationAppService, ChatSessionManager chatSessionManager) {
+            ConversationAppService conversationAppService, ChatSessionManager chatSessionManager,
+            PlanAppService planAppService) {
         this.agentSessionAppService = agentSessionAppService;
         this.conversationAppService = conversationAppService;
         this.chatSessionManager = chatSessionManager;
+        this.planAppService = planAppService;
     }
 
     /** 获取会话中的消息列表 */
@@ -42,6 +47,13 @@ public class PortalAgentSessionController {
     public Result<List<MessageDTO>> getConversationMessages(@PathVariable String sessionId) {
         String userId = UserContext.getCurrentUserId();
         return Result.success(conversationAppService.getConversationMessages(sessionId, userId));
+    }
+
+    /** Get current active plan for the session */
+    @GetMapping("/{sessionId}/plan")
+    public Result<PlanViewDTO> getSessionPlan(@PathVariable String sessionId) {
+        String userId = UserContext.getCurrentUserId();
+        return Result.success(planAppService.getActivePlan(sessionId, userId));
     }
 
     /** 获取助理会话列表 */

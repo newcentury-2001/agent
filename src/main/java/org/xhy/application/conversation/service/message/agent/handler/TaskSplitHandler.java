@@ -4,14 +4,13 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
-import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
-import dev.langchain4j.model.output.TokenUsage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.xhy.application.conversation.service.message.agent.analysis.dto.PlanDecisionDTO;
 import org.xhy.application.conversation.service.message.agent.event.AgentWorkflowEvent;
 import org.xhy.application.conversation.service.message.agent.manager.TaskManager;
 import org.xhy.application.conversation.service.message.agent.service.InfoRequirementService;
@@ -23,26 +22,38 @@ import org.xhy.domain.conversation.constant.Role;
 import org.xhy.domain.conversation.model.MessageEntity;
 import org.xhy.domain.conversation.service.ContextDomainService;
 import org.xhy.domain.conversation.service.MessageDomainService;
+import org.xhy.domain.plan.model.PlanEntity;
+import org.xhy.domain.plan.model.PlanStatus;
+import org.xhy.domain.plan.model.PlanStepEntity;
+import org.xhy.domain.plan.model.PlanStepStatus;
+import org.xhy.domain.plan.service.PlanDomainService;
 import org.xhy.domain.task.model.TaskEntity;
 import org.xhy.infrastructure.llm.LLMServiceFactory;
+import org.xhy.infrastructure.utils.ModelResponseToJsonUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.Map;
 
-/** 任务拆分处理器 负责将复杂任务拆分为可管理的子任务 */
 @Component
 public class TaskSplitHandler extends AbstractAgentHandler {
 
     private static final Logger log = LoggerFactory.getLogger(TaskSplitHandler.class);
+    private static final String EXTRA_PLAN = "plan";
+    private static final String EXTRA_PLAN_STEPS = "planSteps";
+    private static final String EXTRA_PLAN_STEP_BY_TASK = "planStepByTask";
+
     private final InfoRequirementService infoRequirementService;
+    private final PlanDomainService planDomainService;
 
     public TaskSplitHandler(LLMServiceFactory llmServiceFactory, TaskManager taskManager,
             ContextDomainService contextDomainService, InfoRequirementService infoRequirementService,
-            MessageDomainService messageDomainService) {
+            MessageDomainService messageDomainService, PlanDomainService planDomainService) {
         super(llmServiceFactory, taskManager, contextDomainService, messageDomainService);
         this.infoRequirementService = infoRequirementService;
+        this.planDomainService = planDomainService;
     }
 
     @Override
@@ -52,7 +63,7 @@ public class TaskSplitHandler extends AbstractAgentHandler {
 
     @Override
     protected void transitionToNextState(AgentWorkflowContext<?> context) {
-        // 任务拆分阶段不需要立即转换状态，在处理完成后转换
+        // handled after planning
     }
 
     @Override
@@ -60,109 +71,113 @@ public class TaskSplitHandler extends AbstractAgentHandler {
     protected <T> void processEvent(AgentWorkflowContext<?> contextObj) {
         AgentWorkflowContext<T> context = (AgentWorkflowContext<T>) contextObj;
 
-        // 首先检查信息是否完整
         infoRequirementService.checkInfoAndWaitIfNeeded(context).thenAccept(infoComplete -> {
             if (infoComplete) {
-                // 信息完整，执行任务拆分
-                log.info("信息完整，开始执行任务拆分");
                 doTaskSplitting(context);
             }
-            // 如果信息不完整，checkInfoAndWaitIfNeeded已经处理了提示和上下文保存
         });
 
-        // 设置为true以阻止父类自动调用transitionToNextState
-        // 我们将在doTaskSplitting的回调中手动处理状态转换
         this.setBreak(true);
     }
 
-    /** 执行实际的任务拆分逻辑 */
     private <T> void doTaskSplitting(AgentWorkflowContext<T> context) {
         try {
+            PlanData planData = getOrCreatePlan(context);
+            if (planData == null || planData.steps.isEmpty()) {
+                context.handleError(new RuntimeException("??????"));
+                return;
+            }
 
-            // 获取流式模型客户端
-            StreamingChatModel streamingClient = getStreamingClient(context);
+            Map<String, PlanStepEntity> stepByTaskId = new HashMap<>();
+            for (PlanStepEntity step : planData.steps) {
+                String taskName = step.getTitle() == null || step.getTitle().isBlank()
+                        ? "Step " + step.getStepNo()
+                        : step.getTitle();
+                TaskEntity subTask = taskManager.createSubTask(taskName, context.getParentTask().getId(),
+                        context.getChatContext());
+                context.addSubTask(taskName, subTask);
+                stepByTaskId.put(subTask.getId(), step);
+            }
 
-            // 构建任务拆分请求
-            ChatRequest splitTaskRequest = buildSplitTaskRequest(context);
+            context.addExtraData(EXTRA_PLAN, planData.plan);
+            context.addExtraData(EXTRA_PLAN_STEPS, planData.steps);
+            context.addExtraData(EXTRA_PLAN_STEP_BY_TASK, stepByTaskId);
 
-            // 不阻塞，使用Future跟踪任务拆分完成
-            CompletableFuture<Boolean> splitTaskFuture = new CompletableFuture<>();
+            String planSummary = buildPlanSummary(planData.plan, planData.steps, planData.reused);
+            context.getLlmMessageEntity().setContent(planSummary);
+            context.getLlmMessageEntity().setMessageType(MessageType.TEXT);
 
-            // 流式处理任务拆分响应
-            streamingClient.doChat(splitTaskRequest, new StreamingChatResponseHandler() {
-                StringBuilder taskSplitResult = new StringBuilder();
+            context.sendMessage(planSummary, MessageType.TEXT);
+            context.sendEndMessage(MessageType.TASK_SPLIT_FINISH);
 
-                @Override
-                public void onPartialResponse(String partialResponse) {
-                    // 累积响应结果
-                    taskSplitResult.append(partialResponse);
+            saveMessageAndUpdateContext(Collections.singletonList(context.getLlmMessageEntity()),
+                    context.getChatContext());
 
-                    // 发送流式响应给前端
-                    context.sendMessage(partialResponse, MessageType.TEXT);
-                }
-
-                @Override
-                public void onCompleteResponse(ChatResponse completeResponse) {
-                    try {
-                        // 设置LLM消息内容和token数
-                        TokenUsage tokenUsage = completeResponse.metadata().tokenUsage();
-                        Integer outputTokenCount = tokenUsage.outputTokenCount();
-
-                        String fullResponse = completeResponse.aiMessage().text();
-                        context.getLlmMessageEntity().setContent(fullResponse);
-                        context.getLlmMessageEntity().setTokenCount(outputTokenCount);
-                        context.getLlmMessageEntity().setMessageType(MessageType.TEXT);
-
-                        // 分割任务描述
-                        List<String> tasks = splitTaskDescriptions(fullResponse);
-
-                        if (tasks.isEmpty()) {
-                            context.handleError(new RuntimeException("任务拆分失败，未能识别子任务"));
-                            splitTaskFuture.complete(false);
-                            return;
-                        }
-
-                        // 为每个子任务创建实体
-                        for (String task : tasks) {
-                            TaskEntity subTask = taskManager.createSubTask(task, context.getParentTask().getId(),
-                                    context.getChatContext());
-
-                            // 添加到上下文
-                            context.addSubTask(task, subTask);
-                        }
-
-                        context.sendEndMessage(MessageType.TASK_SPLIT_FINISH);
-
-                        // 保存用户消息和LLM消息，并更新上下文
-                        saveMessageAndUpdateContext(Collections.singletonList(context.getLlmMessageEntity()),
-                                context.getChatContext());
-
-                        // 转换到任务拆分完成状态
-                        context.transitionTo(AgentWorkflowState.TASK_SPLIT_COMPLETED);
-
-                        splitTaskFuture.complete(true);
-                    } catch (Exception e) {
-                        log.error("任务拆分处理响应失败", e);
-                        context.handleError(e);
-                        splitTaskFuture.complete(false);
-                    }
-                }
-
-                @Override
-                public void onError(Throwable error) {
-                    log.error("任务拆分失败", error);
-                    context.handleError(error);
-                    splitTaskFuture.complete(false);
-                }
-            });
+            context.transitionTo(AgentWorkflowState.TASK_SPLIT_COMPLETED);
         } catch (Exception e) {
-            log.error("执行任务拆分失败", e);
+            log.error("Task planning failed", e);
             context.handleError(e);
         }
     }
 
-    /** 构建任务拆分请求 */
-    private <T> ChatRequest buildSplitTaskRequest(AgentWorkflowContext<T> context) {
+    private <T> PlanData getOrCreatePlan(AgentWorkflowContext<T> context) {
+        String sessionId = context.getChatContext().getSessionId();
+        String userId = context.getChatContext().getUserId();
+
+        PlanEntity activePlan = planDomainService.getActivePlan(sessionId, userId);
+        if (activePlan != null) {
+            List<PlanStepEntity> steps = planDomainService.getPlanSteps(activePlan.getId());
+            if (!steps.isEmpty()) {
+                return new PlanData(activePlan, steps, true);
+            }
+        }
+
+        ChatRequest request = buildPlanningRequest(context);
+        ChatModel client = getStrandClient(context);
+        ChatResponse response = client.chat(request);
+        PlanDecisionDTO decision = ModelResponseToJsonUtils.toJson(response.aiMessage().text(), PlanDecisionDTO.class);
+
+        List<PlanStepEntity> steps = new ArrayList<>();
+        String title = context.getChatContext().getUserMessage();
+        String goal = "";
+
+        if (decision != null && decision.isNeedPlan() && decision.getPlan() != null) {
+            PlanDecisionDTO.PlanDTO planDto = decision.getPlan();
+            if (planDto.getTitle() != null && !planDto.getTitle().isBlank()) {
+                title = planDto.getTitle();
+            }
+            goal = planDto.getGoal();
+
+            if (planDto.getSteps() != null && !planDto.getSteps().isEmpty()) {
+                int idx = 1;
+                for (PlanDecisionDTO.PlanStepDTO stepDto : planDto.getSteps()) {
+                    PlanStepEntity step = new PlanStepEntity();
+                    Integer stepNo = stepDto.getIndex() != null ? stepDto.getIndex() : idx;
+                    step.setStepNo(stepNo);
+                    step.setTitle(stepDto.getTitle() == null ? ("Step " + stepNo) : stepDto.getTitle());
+                    step.setDetail(stepDto.getDetail());
+                    step.setStatus(PlanStepStatus.TODO.name());
+                    steps.add(step);
+                    idx++;
+                }
+            }
+        }
+
+        if (steps.isEmpty()) {
+            PlanStepEntity step = new PlanStepEntity();
+            step.setStepNo(1);
+            step.setTitle(title);
+            step.setDetail("??????");
+            step.setStatus(PlanStepStatus.TODO.name());
+            steps.add(step);
+        }
+
+        PlanEntity plan = planDomainService.createPlan(userId, sessionId, title, goal, steps);
+        plan.setStatus(PlanStatus.ACTIVE.name());
+        return new PlanData(plan, steps, false);
+    }
+
+    private <T> ChatRequest buildPlanningRequest(AgentWorkflowContext<T> context) {
         List<ChatMessage> messages = new ArrayList<>();
         for (MessageEntity messageEntity : context.getChatContext().getMessageHistory()) {
             String content = messageEntity.getContent();
@@ -174,51 +189,34 @@ public class TaskSplitHandler extends AbstractAgentHandler {
                 messages.add(new AiMessage(content));
             }
         }
-        // 添加系统提示词
-        messages.add(new SystemMessage(AgentPromptTemplates.getDecompositionPrompt()));
-
-        // 添加用户消息
+        messages.add(new SystemMessage(AgentPromptTemplates.getPlanningPrompt()));
         messages.add(new UserMessage(context.getChatContext().getUserMessage()));
-
         return buildChatRequest(context, messages);
     }
 
-    /** 将大模型返回的文本分割为子任务列表 */
-    private List<String> splitTaskDescriptions(String text) {
-        List<String> tasks = new ArrayList<>();
-
-        // 简单的任务分割逻辑，基于行号和可能的标记如"任务1"，"1."等
-        // 实际项目中可能需要更复杂的解析逻辑
-        String[] lines = text.split("\n");
-        StringBuilder currentTask = new StringBuilder();
-
-        for (String line : lines) {
-            line = line.trim();
-
-            // 跳过空行
-            if (line.isEmpty()) {
-                continue;
-            }
-
-            // 检测新任务的开始（基于常见模式）
-            boolean isNewTask = line.matches("^\\d+\\..*") || // "1. 任务描述"
-                    line.matches("^任务\\s*\\d+.*") || // "任务1: 描述"
-                    line.matches("^子任务\\s*\\d+.*"); // "子任务1: 描述"
-
-            if (isNewTask && currentTask.length() > 0) {
-                // 保存之前的任务
-                tasks.add(currentTask.toString().trim());
-                currentTask = new StringBuilder();
-            }
-
-            currentTask.append(line).append("\n");
+    private String buildPlanSummary(PlanEntity plan, List<PlanStepEntity> steps, boolean reused) {
+        StringBuilder summary = new StringBuilder();
+        summary.append(reused ? "Using existing plan: " : "Created plan: ");
+        if (plan != null && plan.getTitle() != null) {
+            summary.append("??: ").append(plan.getTitle()).append(" ");
         }
-
-        // 添加最后一个任务
-        if (currentTask.length() > 0) {
-            tasks.add(currentTask.toString().trim());
+        int i = 1;
+        for (PlanStepEntity step : steps) {
+            summary.append(i).append(". ").append(step.getTitle() == null ? "Step" : step.getTitle()).append(" ");
+            i++;
         }
+        return summary.toString();
+    }
 
-        return tasks;
+    private static class PlanData {
+        private final PlanEntity plan;
+        private final List<PlanStepEntity> steps;
+        private final boolean reused;
+
+        private PlanData(PlanEntity plan, List<PlanStepEntity> steps, boolean reused) {
+            this.plan = plan;
+            this.steps = steps;
+            this.reused = reused;
+        }
     }
 }

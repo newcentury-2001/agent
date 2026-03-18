@@ -162,22 +162,24 @@ export default function ToolsPage() {
         </div>
         
         {/* 用户创建的工具部分 */}
-        <CreatedToolsSection
-          ownedTools={ownedTools}
-          loading={userToolsLoading}
-          onToolClick={openUserToolDetail}
-          onEditClick={handleEditTool}
-          onDeleteClick={openDeleteConfirm}
-          onPublishClick={handleOpenPublishDialog}
-        />
+      <CreatedToolsSection
+        ownedTools={ownedTools}
+        loading={userToolsLoading}
+        onToolClick={openUserToolDetail}
+        onEditClick={handleEditTool}
+        onDeleteClick={openDeleteConfirm}
+        onPublishClick={handleOpenPublishDialog}
+        onRefreshStatus={fetchUserTools}
+      />
         
         {/* 用户安装的工具部分 */}
-        <InstalledToolsSection
-          installedTools={installedTools}
-          loading={userToolsLoading}
-          onToolClick={openUserToolDetail}
-          onDeleteClick={openDeleteConfirm}
-        />
+      <InstalledToolsSection
+        installedTools={installedTools}
+        loading={userToolsLoading}
+        onToolClick={openUserToolDetail}
+        onDeleteClick={openDeleteConfirm}
+        onRefreshStatus={fetchUserTools}
+      />
         
         {/* 工具市场推荐部分 */}
         <RecommendedToolsSection

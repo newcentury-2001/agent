@@ -28,6 +28,7 @@ export const API_ENDPOINTS = {
   SESSION: "/agents/sessions",
   SESSION_DETAIL: (id: string) => `/agents/sessions/${id}`,
   SESSION_MESSAGES: (id: string) => `/agents/sessions/${id}/messages`,
+  SESSION_PLAN: (id: string) => `/agents/sessions/${id}/plan`,
   DELETE_SESSION: (id: string) => `/agents/sessions/${id}`,
   CHAT: "/agents/sessions/chat",
   INTERRUPT_SESSION: (id: string) => `/agents/sessions/${id}/interrupt`, // 新增：中断会话

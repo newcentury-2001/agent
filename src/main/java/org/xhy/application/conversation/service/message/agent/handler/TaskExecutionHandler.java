@@ -5,7 +5,6 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolProvider;
 import org.springframework.stereotype.Component;
-import org.xhy.application.conversation.service.handler.content.ChatContext;
 import org.xhy.application.conversation.service.message.agent.Agent;
 import org.xhy.application.conversation.service.message.agent.AgentToolManager;
 import org.xhy.application.conversation.service.message.agent.event.AgentWorkflowEvent;
@@ -17,23 +16,33 @@ import org.xhy.domain.conversation.constant.MessageType;
 import org.xhy.domain.conversation.model.MessageEntity;
 import org.xhy.domain.conversation.service.ContextDomainService;
 import org.xhy.domain.conversation.service.MessageDomainService;
+import org.xhy.domain.plan.model.PlanEntity;
+import org.xhy.domain.plan.model.PlanStepEntity;
+import org.xhy.domain.plan.model.PlanStepStatus;
+import org.xhy.domain.plan.service.PlanDomainService;
 import org.xhy.domain.task.constant.TaskStatus;
 import org.xhy.domain.task.model.TaskEntity;
 import org.xhy.infrastructure.llm.LLMServiceFactory;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
-/** 任务执行处理器 处理子任务的执行逻辑 */
 @Component
 public class TaskExecutionHandler extends AbstractAgentHandler {
+    private static final String EXTRA_PLAN = "plan";
+    private static final String EXTRA_PLAN_STEPS = "planSteps";
+    private static final String EXTRA_PLAN_STEP_BY_TASK = "planStepByTask";
+
     private final AgentToolManager toolManager;
+    private final PlanDomainService planDomainService;
 
     public TaskExecutionHandler(LLMServiceFactory llmServiceFactory, AgentToolManager toolManager,
             TaskManager taskManager, ContextDomainService contextDomainService,
-            MessageDomainService messageDomainService) {
+            MessageDomainService messageDomainService, PlanDomainService planDomainService) {
         super(llmServiceFactory, taskManager, contextDomainService, messageDomainService);
         this.toolManager = toolManager;
+        this.planDomainService = planDomainService;
     }
 
     @Override
@@ -52,11 +61,6 @@ public class TaskExecutionHandler extends AbstractAgentHandler {
         AgentWorkflowContext<T> context = (AgentWorkflowContext<T>) contextObj;
 
         try {
-            // 获取工具提供者
-            ChatContext chatContext = contextObj.getChatContext();
-            // ToolProvider toolProvider = toolManager.createToolProvider(toolManager.getAvailableTools());
-
-            // 依次执行每个子任务
             while (context.hasNextTask()) {
                 String taskName = context.getNextTask();
                 if (taskName == null) {
@@ -66,12 +70,10 @@ public class TaskExecutionHandler extends AbstractAgentHandler {
                 TaskEntity subTask = context.getSubTaskMap().get(taskName);
                 executeSubTask(context, subTask, taskName, null);
 
-                // 更新父任务进度
                 taskManager.updateTaskProgress(context.getParentTask(), context.getCompletedTaskCount(),
                         context.getTotalTaskCount());
             }
 
-            // 所有子任务执行完成，转换到任务执行完成状态
             context.transitionTo(AgentWorkflowState.TASK_EXECUTED);
 
         } catch (Exception e) {
@@ -79,92 +81,108 @@ public class TaskExecutionHandler extends AbstractAgentHandler {
         }
     }
 
-    /** 执行单个子任务 */
     private <T> void executeSubTask(AgentWorkflowContext<T> context, TaskEntity subTask, String taskName,
             ToolProvider toolProvider) {
 
+        PlanEntity plan = (PlanEntity) context.getExtraData(EXTRA_PLAN);
+        PlanStepEntity planStep = getPlanStep(context, subTask);
+        if (plan != null && planStep != null) {
+            planDomainService.updateStepStatus(planStep, PlanStepStatus.DOING, null);
+            planDomainService.updateCurrentStep(plan, planStep.getStepNo());
+        }
+
         try {
             String taskId = subTask.getId();
-            // 更新任务状态为进行中
             taskManager.updateTaskStatus(subTask, TaskStatus.IN_PROGRESS);
 
-            // 保存执行消息
             MessageEntity taskCallMessageEntity = createMessageEntity(context, MessageType.TASK_EXEC, taskName, 0);
             messageDomainService.saveMessage(Collections.singletonList(taskCallMessageEntity));
 
-            // 通知前端当前执行的任务
             context.sendEndMessage(taskName, MessageType.TASK_EXEC);
-
-            // 通知前端任务状态
             context.sendEndWithTaskIdMessage(taskId, MessageType.TASK_STATUS_TO_LOADING);
 
-            // 获取用户原始请求
             String userRequest = context.getChatContext().getUserMessage();
-
-            // 获取之前子任务的结果
             Map<String, String> previousTaskResults = context.getTaskResults();
+            String planContext = buildPlanContext(plan,
+                    (List<PlanStepEntity>) context.getExtraData(EXTRA_PLAN_STEPS));
 
-            // 构建任务提示词
-            String taskPrompt = AgentPromptTemplates.getTaskExecutionPrompt(userRequest, taskName, previousTaskResults);
+            String taskPrompt = AgentPromptTemplates.getTaskExecutionPrompt(userRequest, taskName, previousTaskResults,
+                    planContext);
 
-            // 执行子任务
             ChatModel strandClient = llmServiceFactory.getStrandClient(context.getChatContext().getProvider(),
                     context.getChatContext().getModel());
 
-            // 创建Agent服务
             Agent agent = AiServices.builder(Agent.class).chatModel(strandClient).toolProvider(toolProvider).build();
 
-            // 执行任务，直接使用完整提示词
             AiMessage aiMessage = agent.chat(taskPrompt);
 
-            // 处理工具调用
             if (aiMessage.hasToolExecutionRequests()) {
                 handleToolCalls(aiMessage, context);
             }
 
-            // 获取任务结果
             String taskResult = aiMessage.text();
 
-            // 保存子任务结果
             context.addTaskResult(taskName, taskResult);
             taskManager.completeTask(subTask, taskResult);
 
-            // 通知前端任务完成
+            if (plan != null && planStep != null) {
+                planDomainService.updateStepStatus(planStep, PlanStepStatus.DONE, taskResult);
+            }
+
             context.sendEndWithTaskIdMessage(taskId, MessageType.TASK_STATUS_TO_FINISH);
 
         } catch (Exception e) {
-            // 处理子任务执行异常，但不影响其他子任务执行
             subTask.updateStatus(TaskStatus.FAILED);
-            subTask.setTaskResult("执行失败: " + e.getMessage());
+            subTask.setTaskResult("??: " + e.getMessage());
             taskManager.updateTaskStatus(subTask, TaskStatus.FAILED);
 
-            // 记录错误并继续
-            context.sendEndMessage("任务 '" + taskName + "' 执行失败: " + e.getMessage(), MessageType.TEXT);
+            if (plan != null && planStep != null) {
+                planDomainService.updateStepStatus(planStep, PlanStepStatus.FAILED, e.getMessage());
+            }
 
-            // 为了工作流继续，我们仍然增加已完成任务计数
-            context.addTaskResult(taskName, "执行失败: " + e.getMessage());
+            context.sendEndMessage("?? '" + taskName + "' ??: " + e.getMessage(), MessageType.TEXT);
+            context.addTaskResult(taskName, "??: " + e.getMessage());
         }
     }
 
-    /** 处理工具调用 */
     private <T> void handleToolCalls(AiMessage aiMessage, AgentWorkflowContext<T> context) {
-        // 创建工具调用消息实体
         MessageEntity toolCallMessageEntity = createMessageEntity(context, MessageType.TOOL_CALL, null, 0);
-        StringBuilder toolCallsContent = new StringBuilder("工具调用:\n");
+        StringBuilder toolCallsContent = new StringBuilder("Tool calls: ");
 
         aiMessage.toolExecutionRequests().forEach(toolExecutionRequest -> {
             String toolName = toolExecutionRequest.name();
-            toolCallsContent.append("- ").append(toolName).append("\n");
-
-            // 通知前端工具调用
+            toolCallsContent.append("- ").append(toolName).append(" ");
             context.sendEndMessage(toolName, MessageType.TOOL_CALL);
         });
 
-        // 设置工具调用内容并保存
         toolCallMessageEntity.setContent(toolCallsContent.toString());
         messageDomainService.saveMessage(Collections.singletonList(toolCallMessageEntity));
 
-        // 更新上下文
         context.getChatContext().getContextEntity().getActiveMessages().add(toolCallMessageEntity.getId());
+    }
+
+    private PlanStepEntity getPlanStep(AgentWorkflowContext<?> context, TaskEntity subTask) {
+        Object mapObj = context.getExtraData(EXTRA_PLAN_STEP_BY_TASK);
+        if (!(mapObj instanceof Map)) {
+            return null;
+        }
+        Map<String, PlanStepEntity> map = (Map<String, PlanStepEntity>) mapObj;
+        return map.get(subTask.getId());
+    }
+
+    private String buildPlanContext(PlanEntity plan, List<PlanStepEntity> steps) {
+        if (plan == null || steps == null || steps.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("Current plan: ");
+        if (plan.getTitle() != null) {
+            sb.append("??: ").append(plan.getTitle()).append(" ");
+        }
+        for (PlanStepEntity step : steps) {
+            sb.append(step.getStepNo()).append(". [").append(step.getStatus()).append("] ")
+                    .append(step.getTitle() == null ? "Step" : step.getTitle()).append(" ");
+        }
+        return sb.toString();
     }
 }
