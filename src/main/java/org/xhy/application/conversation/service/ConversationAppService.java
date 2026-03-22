@@ -304,6 +304,9 @@ public class ConversationAppService {
         chatContext.setMcpServerNames(mcpServerNames);
         chatContext.setFileUrls(chatRequest.getFileUrls());
         chatContext.setInstanceId(instanceId);
+        if (chatRequest.getStream() != null) {
+            chatContext.setStreaming(chatRequest.getStream());
+        }
         return chatContext;
     }
 

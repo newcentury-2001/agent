@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { streamChat } from "@/lib/api"
 import { toast } from "@/hooks/use-toast"
 import { getSessionMessages, getSessionMessagesWithToast, type MessageDTO } from "@/lib/session-message-service"
@@ -73,6 +74,8 @@ export function ChatPanel({ conversationId, isFunctionalAgent = false, agentName
   const [uploadedFiles, setUploadedFiles] = useState<ChatFile[]>([]) // 新增：已上传的文件列表
   const [isInterrupting, setIsInterrupting] = useState(false) // 新增：中断状态
   const [canInterrupt, setCanInterrupt] = useState(false) // 新增：是否可以中断
+  const [confirmPullImage, setConfirmPullImage] = useState<string | null>(null)
+  const [isConfirmPullOpen, setIsConfirmPullOpen] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -264,20 +267,33 @@ export function ChatPanel({ conversationId, isFunctionalAgent = false, agentName
     }, 100)
   }
 
+  const parseConfirmPullImage = (text: string): string | null => {
+    if (!text) return null
+    const match = text.match(/Confirm pull by setting confirmPull=true for image:\s*([^\s]+)/)
+    return match ? match[1] : null
+  }
+
   // 处理发送消息
-  const handleSendMessage = async () => {
-    if (!input.trim() && uploadedFiles.length === 0) return
+  const handleSendMessage = async (overrideMessage?: string, overrideFileUrls?: string[]) => {
+    const messageText = overrideMessage !== undefined ? overrideMessage : input.trim()
 
-    // 添加调试信息
- 
-    
-    // 获取已完成上传的文件URL
-    const completedFiles = uploadedFiles.filter(file => file.url && file.uploadProgress === 100)
-    const fileUrls = completedFiles.map(file => file.url)
+    let fileUrls: string[] = []
+    if (overrideFileUrls !== undefined) {
+      fileUrls = overrideFileUrls
+    } else {
+      // ??????????URL
+      const completedFiles = uploadedFiles.filter(file => file.url && file.uploadProgress === 100)
+      fileUrls = completedFiles.map(file => file.url)
+    }
 
-    const userMessage = input.trim()
-    setInput("")
-    setUploadedFiles([]) // 清空已上传的文件
+    if (!messageText.trim() && fileUrls.length === 0) return
+
+    const userMessage = messageText.trim()
+    if (overrideMessage === undefined) {
+      setInput("")
+      setUploadedFiles([]) // ????????
+    }
+
     setIsTyping(true)
     setIsThinking(true) // 设置思考状态
     setCurrentAssistantMessage(null) // 重置助手消息状态
@@ -437,6 +453,14 @@ export function ChatPanel({ conversationId, isFunctionalAgent = false, agentName
       // 累积消息内容
       messageContentAccumulator.current.content += data.content;
       messageContentAccumulator.current.type = messageType;
+
+      if (!isConfirmPullOpen && !confirmPullImage) {
+        const image = parseConfirmPullImage(messageContentAccumulator.current.content);
+        if (image) {
+          setConfirmPullImage(image);
+          setIsConfirmPullOpen(true);
+        }
+      }
       
       // 更新UI显示
       updateOrCreateMessageInUI(currentMessageId, messageContentAccumulator.current);
@@ -864,6 +888,39 @@ export function ChatPanel({ conversationId, isFunctionalAgent = false, agentName
           )}
         </div>
       </div>
+
+      <Dialog open={isConfirmPullOpen} onOpenChange={setIsConfirmPullOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>确认拉取镜像</DialogTitle>
+            <DialogDescription>
+              即将拉取镜像：<span className="font-mono">{confirmPullImage || "-"}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsConfirmPullOpen(false);
+              }}
+            >
+              取消
+            </Button>
+            <Button
+              onClick={() => {
+                if (confirmPullImage) {
+                  const msg = `确认拉取镜像 ${confirmPullImage}，请继续执行 docker_run，并将 confirmPull=true`;
+                  handleSendMessage(msg, []);
+                }
+                setIsConfirmPullOpen(false);
+                setConfirmPullImage(null);
+              }}
+            >
+              确认拉取
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

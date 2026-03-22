@@ -18,6 +18,9 @@ public class ChatRequest {
 
     private List<String> fileUrls = new ArrayList<>();
 
+    /** 是否流式响应，默认 true */
+    private Boolean stream = true;
+
     public String getMessage() {
         return message;
     }
@@ -40,5 +43,13 @@ public class ChatRequest {
 
     public void setFileUrls(List<String> fileUrls) {
         this.fileUrls = fileUrls;
+    }
+
+    public Boolean getStream() {
+        return stream;
+    }
+
+    public void setStream(Boolean stream) {
+        this.stream = stream;
     }
 }

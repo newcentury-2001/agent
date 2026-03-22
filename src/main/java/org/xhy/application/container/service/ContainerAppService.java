@@ -508,16 +508,18 @@ public class ContainerAppService {
      * @param networkMode 网络模式
      * @return IP地址 */
     private String extractIpAddress(DockerService.ContainerInfo containerInfo, String networkMode) {
-        // host网络模式直接返回localhost
+        // host网络模式：如果Docker在远程，需使用远程宿主机地址；本地则为localhost
         if ("host".equals(networkMode)) {
-            logger.info("容器使用host网络模式，IP地址设为localhost");
-            return "localhost";
+            String host = dockerService.getDockerHostAddressForMappedPorts();
+            logger.info("容器使用host网络模式，IP地址设为{}", host);
+            return host;
         }
 
-        // bridge网络模式返回localhost，通过端口映射访问
+        // bridge网络模式：通过端口映射访问（远程Docker时同样需要远程宿主机地址）
         if ("bridge".equals(networkMode)) {
-            logger.info("容器使用bridge网络模式，IP地址设为127.0.0.1（通过端口映射访问）");
-            return "localhost";
+            String host = dockerService.getDockerHostAddressForMappedPorts();
+            logger.info("容器使用bridge网络模式，IP地址设为{}（通过端口映射访问）", host);
+            return host;
         }
 
         // 其他特殊网络模式从容器网络设置中提取IP

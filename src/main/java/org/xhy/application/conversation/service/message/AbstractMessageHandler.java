@@ -242,6 +242,10 @@ public abstract class AbstractMessageHandler {
             MessageEntity userEntity, MessageEntity llmEntity, MessageWindowChatMemory memory,
             ToolProvider toolProvider) {
 
+        if (toolProvider != null) {
+            logger.warn("Sync chat does not use toolProvider. Tools will be ignored unless streaming is enabled.");
+        }
+
         // 1. 获取同步LLM客户端
         ChatModel syncClient = llmServiceFactory.getStrandClient(chatContext.getProvider(), chatContext.getModel());
 

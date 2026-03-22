@@ -13,9 +13,7 @@ import org.xhy.infrastructure.mcp_gateway.MCPGatewayService;
 import java.util.List;
 import java.util.Map;
 
-/** 应用层获取工具列表处理器
- * 
- * 职责： 1. 从审核容器获取工具定义列表 2. 调用MCPGatewayService和ReviewContainerService 3. 将工具定义存储到工具实体 4. 转换到手动审核状态 */
+/** Fetch tool definitions from review container or direct SSE URL. */
 public class AppFetchingToolsProcessor implements AppToolStateProcessor {
 
     private static final Logger logger = LoggerFactory.getLogger(AppFetchingToolsProcessor.class);
@@ -23,10 +21,6 @@ public class AppFetchingToolsProcessor implements AppToolStateProcessor {
     private final MCPGatewayService mcpGatewayService;
     private final ReviewContainerService reviewContainerService;
 
-    /** 构造函数，注入依赖服务
-     * 
-     * @param mcpGatewayService MCP网关服务
-     * @param reviewContainerService 审核容器服务 */
     public AppFetchingToolsProcessor(MCPGatewayService mcpGatewayService,
             ReviewContainerService reviewContainerService) {
         this.mcpGatewayService = mcpGatewayService;
@@ -40,71 +34,110 @@ public class AppFetchingToolsProcessor implements AppToolStateProcessor {
 
     @Override
     public void process(ToolEntity tool) {
-        logger.info("工具ID: {} 进入FETCHING_TOOLS状态，开始从审核容器获取工具列表。", tool.getId());
+        logger.info("Tool {} entering FETCHING_TOOLS state", tool.getId());
 
         try {
-            // 添加延时以确保部署完成（TODO: 后续可优化为轮询检查部署状态）
-            Thread.sleep(10000);
+            Thread.sleep(3000);
 
-            // 从installCommand中获取工具名称
             Map<String, Object> installCommand = tool.getInstallCommand();
             if (installCommand == null || installCommand.isEmpty()) {
-                throw new BusinessException("安装命令为空");
+                throw new BusinessException("Install command is empty");
             }
 
-            // 解析mcpServers中的第一个key作为工具名称
-            @SuppressWarnings("unchecked")
-            Map<String, Object> mcpServers = (Map<String, Object>) installCommand.get("mcpServers");
-            if (mcpServers == null || mcpServers.isEmpty()) {
-                throw new BusinessException("工具ID: " + tool.getId() + " 安装命令中mcpServers为空。");
+            String toolName = extractToolName(installCommand);
+            if (toolName == null || toolName.isBlank()) {
+                throw new BusinessException("Cannot resolve tool name from install command");
             }
-
-            // 获取第一个key作为工具名称
-            String toolName = mcpServers.keySet().iterator().next();
-            if (toolName == null || toolName.isEmpty()) {
-                throw new BusinessException("工具ID: " + tool.getId() + " 无法从安装命令中获取工具名称。");
-            }
-
-            // 存储MCP服务器名称到工具实体
             tool.setMcpServerName(toolName);
 
-            // 获取审核容器连接信息
-            logger.info("获取审核容器连接信息用于工具 {} 的审核", toolName);
-            ReviewContainerService.ReviewContainerConnection reviewConnection = reviewContainerService
-                    .getReviewContainerConnection();
-
-            logger.info("从审核容器 {}:{} 获取工具 {} 的列表", reviewConnection.getIpAddress(), reviewConnection.getPort(),
-                    toolName);
-
-            // 调用MCPGatewayService从审核容器获取工具列表
-            List<ToolDefinition> toolDefinitions = mcpGatewayService.listToolsFromReviewContainer(toolName,
-                    reviewConnection.getIpAddress(), reviewConnection.getPort());
-
-            if (toolDefinitions != null && !toolDefinitions.isEmpty()) {
-                logger.info("从审核容器获取工具列表成功，数量: {}, 工具: {}", toolDefinitions.size(), toolName);
-
-                // 将获取到的工具定义列表设置到ToolEntity中
-                tool.setToolList(toolDefinitions);
+            String directSseUrl = extractDirectSseUrl(installCommand);
+            List<ToolDefinition> toolDefinitions;
+            if (directSseUrl != null) {
+                logger.info("Fetch tools from direct SSE URL. tool={}, url={}", toolName, directSseUrl);
+                toolDefinitions = fetchToolsWithRetry(directSseUrl, 3);
             } else {
-                logger.warn("从审核容器获取工具列表失败或为空: {}", toolName);
-                throw new BusinessException("从审核容器获取工具列表失败或为空");
+                ReviewContainerService.ReviewContainerConnection reviewConnection = reviewContainerService
+                        .getReviewContainerConnection();
+                toolDefinitions = mcpGatewayService.listToolsFromReviewContainer(toolName,
+                        reviewConnection.getIpAddress(), reviewConnection.getPort());
             }
 
+            if (toolDefinitions == null || toolDefinitions.isEmpty()) {
+                throw new BusinessException("Tool definitions empty");
+            }
+            tool.setToolList(toolDefinitions);
+
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // 恢复中断状态
-            logger.error("获取工具列表过程中被中断: tool={}", tool.getName(), e);
-            throw new BusinessException("获取工具列表过程中被中断: " + e.getMessage(), e);
+            Thread.currentThread().interrupt();
+            throw new BusinessException("Fetching tools interrupted: " + e.getMessage(), e);
         } catch (BusinessException e) {
-            logger.error("从审核容器获取工具列表失败 {} (ID: {}): {}", tool.getName(), tool.getId(), e.getMessage(), e);
-            throw e; // 重新抛出BusinessException
+            logger.error("Fetching tools failed: {} ({})", tool.getName(), tool.getId(), e);
+            throw e;
         } catch (Exception e) {
-            logger.error("从审核容器获取工具列表 {} (ID: {}) 过程中发生意外错误: {}", tool.getName(), tool.getId(), e.getMessage(), e);
-            throw new BusinessException("从审核容器获取工具列表过程中发生意外错误: " + e.getMessage(), e);
+            logger.error("Fetching tools error: {} ({})", tool.getName(), tool.getId(), e);
+            throw new BusinessException("Fetching tools failed: " + e.getMessage(), e);
         }
     }
 
     @Override
     public ToolStatus getNextStatus() {
-        return ToolStatus.MANUAL_REVIEW;
+        return ToolStatus.APPROVED;
+    }
+
+    private String extractToolName(Map<String, Object> installCommand) {
+        Object serversObj = installCommand.get("mcpServers");
+        if (!(serversObj instanceof Map)) {
+            return null;
+        }
+        @SuppressWarnings("unchecked")
+        Map<String, Object> mcpServers = (Map<String, Object>) serversObj;
+        if (mcpServers.isEmpty()) {
+            return null;
+        }
+        return mcpServers.keySet().iterator().next();
+    }
+
+    private String extractDirectSseUrl(Map<String, Object> installCommand) {
+        Object serversObj = installCommand.get("mcpServers");
+        if (!(serversObj instanceof Map)) {
+            return null;
+        }
+        @SuppressWarnings("unchecked")
+        Map<String, Object> mcpServers = (Map<String, Object>) serversObj;
+        if (mcpServers.isEmpty()) {
+            return null;
+        }
+        Object serverConfigObj = mcpServers.values().iterator().next();
+        if (!(serverConfigObj instanceof Map)) {
+            return null;
+        }
+        @SuppressWarnings("unchecked")
+        Map<String, Object> serverConfig = (Map<String, Object>) serverConfigObj;
+        Object url = serverConfig.get("url");
+        if (url == null) {
+            url = serverConfig.get("sseUrl");
+        }
+        return url == null ? null : String.valueOf(url);
+    }
+
+    private List<ToolDefinition> fetchToolsWithRetry(String sseUrl, int maxAttempts) throws Exception {
+        Exception last = null;
+        for (int i = 1; i <= maxAttempts; i++) {
+            try {
+                return mcpGatewayService.listToolsBySseUrl(sseUrl);
+            } catch (Exception e) {
+                last = e;
+                logger.warn("List tools failed (attempt {}/{}): {}", i, maxAttempts, e.getMessage());
+                if (i < maxAttempts) {
+                    try {
+                        Thread.sleep(1000L);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw ie;
+                    }
+                }
+            }
+        }
+        throw new BusinessException("List tools failed after " + maxAttempts + " attempts: " + last.getMessage(), last);
     }
 }

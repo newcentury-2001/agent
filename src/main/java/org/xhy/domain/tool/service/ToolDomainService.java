@@ -111,8 +111,8 @@ public class ToolDomainService {
 
             toolEntity.setStatus(ToolStatus.WAITING_REVIEW);
         } else {
-            // 只修改了信息，设置为人工审核状态
-            toolEntity.setStatus(ToolStatus.MANUAL_REVIEW);
+            // 任何更新都重新走完整审核流程
+            toolEntity.setStatus(ToolStatus.WAITING_REVIEW);
         }
 
         // 更新工具

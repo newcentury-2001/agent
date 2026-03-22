@@ -90,6 +90,7 @@ D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\auth
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\rag\constant\InstallType.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\infrastructure\sso\CommunitySsoService.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\infrastructure\rag\processor\MarkdownTextExtractor.java
+D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\plan\dto\PlanViewDTO.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\infrastructure\highavailability\dto\request\ApiInstanceBatchCreateRequest.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\conversation\service\message\agent\event\AgentEventHandler.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\interfaces\dto\apikey\request\UpdateApiKeyStatusRequest.java
@@ -140,6 +141,7 @@ D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\rag\model
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\rag\repository\RagVersionRepository.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\interfaces\api\admin\AdminRagReviewController.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\agent\service\AgentSessionAppService.java
+D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\plan\model\PlanStatus.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\rag\service\state\impl\EmbeddingFailedStateProcessor.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\tool\repository\ToolVersionRepository.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\highavailability\gateway\HighAvailabilityGateway.java
@@ -414,6 +416,7 @@ D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\orde
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\sso\model\SsoUserInfo.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\rag\assembler\RagVersionAssembler.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\infrastructure\billing\strategy\RuleStrategy.java
+D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\plan\model\PlanStepStatus.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\rag\service\DocumentUnitDomainService.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\trace\event\ExecutionCompletedEvent.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\infrastructure\interceptor\AdminAuthInterceptor.java
@@ -537,15 +540,18 @@ D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\user\serv
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\rag\repository\VectorStoreRepository.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\infrastructure\highavailability\client\HighAvailabilityGatewayClient.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\file\strategy\RagFileStorageStrategy.java
+D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\plan\model\PlanStepEntity.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\rag\model\UserRagFileEntity.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\memory\model\MemoryResult.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\conversation\factory\MessageFactory.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\interfaces\api\portal\apikey\PortalApiKeyController.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\interfaces\api\common\Result.java
+D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\plan\service\PlanAppService.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\rag\assembler\FileProcessProgressAssembler.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\interfaces\dto\container\response\ContainerStatisticsResponse.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\conversation\service\message\chat\ChatMessageHandler.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\conversation\model\MessageEntity.java
+D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\plan\repository\PlanRepository.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\interfaces\api\admin\auth\AdminAuthSettingController.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\interfaces\api\admin\AdminLLMController.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\product\listener\ProductPurchaseEventListener.java
@@ -621,6 +627,7 @@ D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\infrastructure\e
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\infrastructure\payment\constant\PaymentMethod.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\agent\constant\AgentStatus.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\rag\service\state\impl\OcrProcessingStateProcessor.java
+D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\conversation\service\message\agent\analysis\dto\PlanDecisionDTO.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\infrastructure\converter\RoleConverter.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\conversation\service\message\preview\PreviewMessageHandler.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\conversation\service\message\TracingMessageHandler.java
@@ -641,6 +648,7 @@ D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\llm\model
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\rag\dto\ProcessFileRequest.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\conversation\service\message\agent\event\AgentEventBus.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\trace\repository\AgentExecutionSummaryRepository.java
+D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\plan\service\PlanDomainService.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\infrastructure\rag\config\RerankProperties.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\infrastructure\rag\service\UserModelConfigResolver.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\apikey\service\ApiKeyDomainService.java
@@ -711,6 +719,7 @@ D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\rag\
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\billing\dto\RuleContext.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\interfaces\dto\user\request\RegisterRequest.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\interfaces\api\portal\order\OrderController.java
+D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\plan\model\PlanEntity.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\infrastructure\mq\rabbit\RabbitMessageConfig.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\interfaces\api\portal\rag\FileOperationController.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\conversation\repository\ContextRepository.java
@@ -749,5 +758,6 @@ D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\tool\mode
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\rule\constant\RuleHandlerKey.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\application\conversation\service\message\builtin\BuiltInToolRegistry.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\infrastructure\mq\rabbit\RabbitDirectConfig.java
+D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\domain\plan\repository\PlanStepRepository.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\infrastructure\converter\OrderStatusConverter.java
 D:\develop\idea\idea\idea_workspace\agent\src\main\java\org\xhy\infrastructure\utils\ValidationUtils.java

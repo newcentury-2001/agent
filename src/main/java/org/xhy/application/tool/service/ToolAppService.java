@@ -73,10 +73,8 @@ public class ToolAppService {
         // 调用领域服务创建工具
         ToolOperationResult result = toolDomainService.createTool(toolEntity);
 
-        // 检查是否需要状态转换
-        if (result.needStateTransition()) {
-            toolStateStateMachine.submitToolForProcessing(result.getTool());
-        }
+        // ???????????
+        toolStateStateMachine.submitToolForProcessing(result.getTool());
 
         // 将实体转换为DTO返回
         return ToolAssembler.toDTO(result.getTool());
@@ -99,12 +97,11 @@ public class ToolAppService {
         toolEntity.setId(toolId);
         ToolOperationResult result = toolDomainService.updateTool(toolEntity);
 
-        // 检查是否需要状态转换
-        if (result.needStateTransition()) {
-            toolStateStateMachine.submitToolForProcessing(result.getTool());
-        }
+        // ??????????? (use the latest persisted entity to ensure full fields are available)
+        ToolEntity updatedTool = toolDomainService.getTool(toolId, userId);
+        toolStateStateMachine.submitToolForProcessing(updatedTool);
 
-        return ToolAssembler.toDTO(result.getTool());
+        return ToolAssembler.toDTO(updatedTool);
     }
 
     public void deleteTool(String toolId, String userId) {

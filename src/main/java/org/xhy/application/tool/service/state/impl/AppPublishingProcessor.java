@@ -41,76 +41,8 @@ public class AppPublishingProcessor implements AppToolStateProcessor {
 
     @Override
     public void process(ToolEntity tool) {
-        Path tempDownloadPath = null;
-        Path tempUnzipPath = null;
-
-        logger.info("工具ID: {} 进入APPROVED状态，开始发布流程。", tool.getId());
-
-        try {
-            String sourceGitHubUrl = tool.getUploadUrl();
-            if (sourceGitHubUrl == null || sourceGitHubUrl.trim().isEmpty()) {
-                throw new BusinessException("工具 " + tool.getName() + " 的源GitHub URL为空，无法发布。");
-            }
-
-            // 1. 解析源仓库信息，如果URL没有指定版本，则获取最新commit SHA作为版本
-            GitHubRepoInfo sourceRepoInfo = gitHubService.resolveSourceRepoInfoWithLatestCommitIfNoRef(sourceGitHubUrl);
-            String version = sourceRepoInfo.getRef();
-            if (version == null || version.trim().isEmpty()) {
-                throw new BusinessException("无法确定源GitHub仓库的版本号(ref/commit SHA)用于发布。");
-            }
-            // 清理版本名中的非法字符，确保可以用作目录名
-            String sanitizedVersion = version.replaceAll("[^a-zA-Z0-9_.-]", "_");
-            logger.info("将使用源版本 '{}' (清理后为 '{}') 进行发布。", version, sanitizedVersion);
-
-            // 2. 下载源仓库归档
-            tempDownloadPath = gitHubService.downloadRepositoryArchive(sourceRepoInfo);
-
-            // 3. 创建临时解压目录
-            tempUnzipPath = Files.createTempDirectory("unzip-" + UUID.randomUUID().toString().substring(0, 8));
-            logger.info("源仓库内容将解压到临时目录: {}", tempUnzipPath.toString());
-
-            // 4. 解压归档
-            try (ZipFile zipFile = new ZipFile(tempDownloadPath.toFile())) {
-                zipFile.extractAll(tempUnzipPath.toString());
-            }
-            logger.info("源仓库归档文件解压完成。");
-
-            Path actualContentRoot = findActualContentRoot(tempUnzipPath, sourceRepoInfo.getRepoName());
-            if (actualContentRoot == null) {
-                throw new BusinessException("无法在解压的归档中找到实际内容根目录。");
-            }
-            logger.info("找到实际内容根目录: {}", actualContentRoot);
-
-            Path sourcePathToPublish = actualContentRoot;
-            if (sourceRepoInfo.getPathInRepo() != null && !sourceRepoInfo.getPathInRepo().isEmpty()) {
-                sourcePathToPublish = actualContentRoot.resolve(sourceRepoInfo.getPathInRepo());
-                if (!Files.exists(sourcePathToPublish) || !Files.isDirectory(sourcePathToPublish)) {
-                    throw new BusinessException(
-                            "源URL中指定的路径 '" + sourceRepoInfo.getPathInRepo() + "' 在下载的内容中不存在或不是一个目录。");
-                }
-                logger.info("将从指定子路径发布: {}", sourcePathToPublish);
-            }
-
-            // 5. 定义目标仓库中的路径结构
-            // 目标仓库根目录下 -> {工具名}-{源仓库作者名} -> {版本号} -> {工具内容}
-            String toolIdentifierInTarget = tool.getName() + "-" + sourceRepoInfo.getOwner();
-            String targetPathInInternalRepo = toolIdentifierInTarget + "/" + sanitizedVersion;
-            logger.info("内容将发布到目标仓库的路径 '{}' 下", targetPathInInternalRepo);
-
-            // 6. 提交并推送到目标GitHub仓库
-            String commitMessage = String.format("Publish tool: %s, Version: %s (Source: %s@%s)", tool.getName(),
-                    version, sourceRepoInfo.getFullName(), sourceRepoInfo.getRef());
-            gitHubService.commitAndPushToTargetRepo(sourcePathToPublish, targetPathInInternalRepo, commitMessage);
-
-            logger.info("工具 {} 版本 {} 成功发布到目标仓库的路径 {} 下", tool.getName(), version, targetPathInInternalRepo);
-
-        } catch (BusinessException | IOException | GitAPIException e) {
-            logger.error("发布工具 {} (ID: {}) 失败: {}", tool.getName(), tool.getId(), e.getMessage(), e);
-            throw new BusinessException("发布工具到目标仓库时失败: " + e.getMessage(), e);
-        } finally {
-            // 清理临时文件和目录
-            cleanupTemporaryFiles(tempDownloadPath, tempUnzipPath);
-        }
+        // Internal-only mode: do not publish to any URL or repository.
+        logger.info("工具ID: {} 进入APPROVED状态，发布已禁用。 (internal-only mode)", tool.getId());
     }
 
     @Override

@@ -36,6 +36,39 @@ public class DockerService {
         this.containerConfig = containerConfig;
     }
 
+    /**
+     * 返回“后端访问容器映射端口”应使用的宿主机地址。
+     * <p>
+     * - 本地 Docker (unix/npipe) 返回 localhost
+     * - 远程 Docker (tcp://host:port) 返回 host
+     * </p>
+     */
+    public String getDockerHostAddressForMappedPorts() {
+        String dockerHost = containerConfig.getDockerHost();
+        if (dockerHost == null || dockerHost.isBlank()) {
+            return "localhost";
+        }
+
+        // docker-java config uses URIs like tcp://host:2375, unix:///var/run/docker.sock, npipe:////./pipe/docker_engine
+        if (dockerHost.startsWith("tcp://")) {
+            String hostPort = dockerHost.substring("tcp://".length());
+            // strip path if any
+            int slashIdx = hostPort.indexOf('/');
+            if (slashIdx >= 0) {
+                hostPort = hostPort.substring(0, slashIdx);
+            }
+            // strip port if present
+            int colonIdx = hostPort.lastIndexOf(':');
+            if (colonIdx > 0) {
+                return hostPort.substring(0, colonIdx);
+            }
+            return hostPort.isBlank() ? "localhost" : hostPort;
+        }
+
+        // unix://, npipe:// etc.
+        return "localhost";
+    }
+
     @PostConstruct
     public void init() {
         try {

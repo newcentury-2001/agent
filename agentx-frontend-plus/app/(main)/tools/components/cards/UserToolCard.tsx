@@ -132,7 +132,7 @@ export function UserToolCard({
             <DropdownMenuContent align="end">
                {/* 审核状态查询（只对非APPROVED状态的自己创建的工具显示） */}
                {tool.isOwner && tool.status !== ToolStatus.APPROVED && (
-                <DropdownMenuItem onClick={() => setIsReviewDialogOpen(true)}>
+                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setIsReviewDialogOpen(true); }}>
                   <History className="mr-2 h-4 w-4" />
                   查看审核状态
                 </DropdownMenuItem>

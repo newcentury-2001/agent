@@ -79,7 +79,8 @@ export async function streamChat(sessionId: string, message: string, fileUrls?: 
     // 构建请求体，包含可选的文件URL
     const requestBody: any = {
       sessionId,
-      message
+      message,
+      stream: true
     }
     
     // 如果有文件URL，添加到请求体中

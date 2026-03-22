@@ -179,6 +179,22 @@ public class MCPGatewayService {
         }
     }
 
+    /** List tools directly from an SSE URL (no gateway deploy). */
+    public List<ToolDefinition> listToolsBySseUrl(String sseUrl) throws Exception {
+        HttpMcpTransport transport = new HttpMcpTransport.Builder().sseUrl(sseUrl).timeout(Duration.ofSeconds(60))
+                .logRequests(false).logResponses(true).build();
+        McpClient client = new DefaultMcpClient.Builder().transport(transport).build();
+        try {
+            List<ToolSpecification> toolSpecifications = client.listTools();
+            return ToolSpecificationConverter.convert(toolSpecifications);
+        } catch (Exception e) {
+            logger.error("List tools by SSE URL failed: {}", sseUrl, e);
+            throw new BusinessException("List tools by SSE URL failed: " + e.getMessage(), e);
+        } finally {
+            client.close();
+        }
+    }
+
     /** 创建配置了超时的HTTP客户端 */
     private CloseableHttpClient createHttpClient() {
         RequestConfig config = RequestConfig.custom().setConnectTimeout(properties.getConnectTimeout())
